@@ -12,9 +12,12 @@ in the temp directory of a node when using PBS. The script copies those files to
 your directory in hulk so that you don't have to manually log into each node 
 just to check up on the progress of a few files.
 
-NOTE: rsync is used to update the files. This saves redundancy in copies.
+NOTE: This doesn't need to be used anymore since my submission generating
+      scripts (ie. mkreaxsub) also provide file copy to/from the node helper
+	  scripts which completely eliminate the need for this file monitoring
+	  script. (It's sad since I spent like a whole day writing this.)
 
-Example command line usage:
+NOTE: rsync is used to update the files. This saves redundancy in copies.
 '''
 __version__ = '0.1.0'
 __date__ = '3 March 2008'

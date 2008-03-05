@@ -3,20 +3,25 @@
 mkreaxsub.py
 -----------------
 Creates a ReaxFF PBS submission file that uses node scratch /temp1
-directory. A cool feature is that fort.71 will be routinely copied
-over to hulk so that the user can easily monitor the convergence
-of the simulation (instead of logging into the frontend and then
-logging into the node itself).
+directory. Cool features include:
+1. The submission file is written below as a template so it is
+   extremely easy to view and modify.
+2. cptonode [file] -> command to copy a file to the node's
+                      simulation directory (ie. control).
+   cpfromnode [file] -> command to copy a file from the node's
+                        simulation directory (ie. fort.71).
+   nodesh [command] -> execute a command on the node (the working
+                       directory is the node's simulation dir.
+3. Before the simulation output files are copied back, the amount
+   of free space the user has is checked against the total file
+   size of the simulation output files. If the user does not have
+   enough space to accomodate the files, then they aren't copied
+   back.
 
 USAGE: mkreaxsub [pbs_name]
-
-REQUIRES: The generated PBS script requires the accompanying python
-          script called node_file_mon.py which copies some specified
-          files from the node to the user's directory and repeats on
-          some specified interval.
 '''
-__version__ = '0.1.0'
-__date__ = '3 March 2008'
+__version__ = '0.2.0'
+__date__ = '5 March 2008'
 __author__ = 'Michael Huynh (mikeh@caltech.edu)'
 __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
@@ -26,7 +31,6 @@ import random
 
 #Parameters (you can change these if you like)
 pbs_sub_file = 'reax.run'
-file_monitor_script = 'node_file_monitor.py' #assume in same directory as this script
 current_dir = os.getcwd()
 this_script_dir = os.path.abspath(os.path.dirname(sys.argv[0])) #no trailing slash
 #this_script_name = os.path.basename(sys.argv[0]) #in case this script is renamed
@@ -73,24 +77,11 @@ mkdir ${temp_dir}
 cd ${temp_dir}
 cp ${curr_dir}/* .
 
-#Execute monitoring script. In bash, the last PID of a background process
-#(so you MUST have the & at the end) can be found from $!
-#We only monitor fort.71 for now. It is updated every 1 minute.
-#[scriptdir]/[filemonitorscriptname] -i ${temp_dir} -o ${curr_dir} -f "fort.71" -t 1 &
-#monitor_pid=$!
-
 #Run ReaxFF
 exe
 
-#Kill the monitoring script
-#kill ${monitor_pid}
-
-#Check for the correct output files (ie. fort.90)
-
-
-#TODO: Check disk quota. Copy files back only if we have enough disk space.
+#Check disk quota. Copy files back only if we have enough disk space.
 output_size=`du -s . | awk '{print $1}'`
-#space_left=`chq | awk '/\/net\/hulk/ {print $3-$2}'`
 #We have do remove the /net/hulk/home# line now since hulk's nodes report chq
 #differently!
 space_left=`chq | grep '/net/hulk' | sed -r 's/[a-z\/]+[0-9]+[ ]*//g' | awk '{print $2-$1}'`
@@ -108,7 +99,6 @@ pbs_name = sys.argv[1]
 pbs_template = pbs_template.replace('[pbsname]', pbs_name)
 pbs_template = pbs_template.replace('[currentpath]', current_dir)
 pbs_template = pbs_template.replace('[scriptdir]', this_script_dir)
-pbs_template = pbs_template.replace('[filemonitorscriptname]', file_monitor_script)
 #For the pbstempdir, we want to generate a short random string to tag on the end
 #Technically, we can add a check here to see if the temp directory exists. If
 #not, then we can just skip this random generation step. However, I think this
