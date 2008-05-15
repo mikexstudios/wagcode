@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 '''
 molfra_analysis.py
 -----------------
@@ -10,11 +10,15 @@ This file can be then fed into gnuplot for visualization.
 NEW: Now also outputs a tsv file with total number of molecules.
      Additionally creates gplot files that can be directly fed
 	 into gnuplot for easy plotting of tsv data.
+
+CHANGES:
+17th April 2008 - Fixed line 147 regex to account for cases where Total Number
+                  of molecules has extra whitespace.
 '''
-__version__ = '0.1.0'
-__date__ = '21 February 2008'
+__version__ = '0.1.1'
+__date__ = '17 April 2008'
 __author__ = 'Michael Huynh (mikeh@caltech.edu)'
-__website__ = ''
+__website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
 
 import re
@@ -144,7 +148,7 @@ while True:
             print 'ERROR: '+matches.group(3)+' not in mol_dict!'
 
     #Match number of molecules
-    matches = re.match('^\s+Total number of molecules: (\d+)\s*', line);
+    matches = re.match('^\s+Total number of molecules:\s*(\d+)\s*', line);
     if(matches != None):
         #num_molecules.append(matches.group(1))
         fnummol.write(str(current_iteration)+"\t"+str(matches.group(1))+"\n")

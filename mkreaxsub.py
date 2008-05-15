@@ -10,6 +10,9 @@ directory. Cool features include:
                       simulation directory (ie. control).
    cpfromnode [file] -> command to copy a file from the node's
                         simulation directory (ie. fort.71).
+						Note: If [file] is * (all files) you have
+						to input * as \* so that the shell doesn't
+						misinterpret it.
    nodesh [command] -> execute a command on the node (the working
                        directory is the node's simulation dir.
 3. Before the simulation output files are copied back, the amount
@@ -19,9 +22,16 @@ directory. Cool features include:
    back.
 
 USAGE: mkreaxsub [pbs_name]
+
+CHANGELOG:
+0.2.3 (23 March 2008) - Fixed problem in cp(from|to)node files where the second
+                        rsh command needs to be wrapped in quotes.
+0.2.2 (14 March 2008) - Fixed problem in cp(from|to)node files where '*' wasn't
+                        interpreted correctly.
+0.2.1 (08 March 2008) - Fixed bug in nodesh generation.
 '''
-__version__ = '0.2.0'
-__date__ = '5 March 2008'
+__version__ = '0.2.3'
+__date__ = '23 March 2008'
 __author__ = 'Michael Huynh (mikeh@caltech.edu)'
 __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
@@ -64,9 +74,11 @@ temp_dir=/temp1/${USER}/[pbstempdir]
 cluster_name=`echo $PBS_O_HOST | sed 's/\..*//g'`
 node_name=`echo $HOSTNAME | sed 's/\..*//g'`
 env | grep hive
-echo "rsh ${cluster_name} rsh ${node_name} cd ${temp_dir};"'$1' > nodesh
-echo "rsh ${cluster_name} rsh ${node_name} cp ${curr_dir}/"'$1'" ${temp_dir}/" > cptonode
-echo "rsh ${cluster_name} rsh ${node_name} cp ${temp_dir}/"'$1'" ${curr_dir}/" > cpfromnode
+echo "rsh ${cluster_name} \\"rsh ${node_name} cd ${temp_dir}\;"'$1"' > nodesh
+echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"cp ${curr_dir}/"'$1'" ${temp_dir}/\\\\\\"\\"" > cptonode
+echo "echo \$CMD; \$CMD" >> cptonode
+echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"cp ${temp_dir}/"'$1'" ${curr_dir}/\\\\\\"\\"" > cpfromnode
+echo "echo \$CMD; \$CMD" >> cpfromnode
 chmod 755 nodesh
 chmod 755 cptonode
 chmod 755 cpfromnode
