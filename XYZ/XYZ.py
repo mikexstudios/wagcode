@@ -97,6 +97,16 @@ class XYZ:
 	def rotate(self, rx, ry, rz):
 		pass
 
+	'''
+	Adds an XYZ object to this one.
+
+	@param in_molecule XYZ object representation of the molecule you want to add.
+	'''
+	def add(self, in_molecule):
+		in_molecule_listrep = in_molecule.list_representation()
+		self.rows.extend(in_molecule_listrep)
+		#print self.rows
+
 	def export(self, filename):
 		f = file(filename, 'w')
 		#First line of XYZ file is the number of atoms
@@ -109,12 +119,19 @@ class XYZ:
 			row = map(str, row)
 			f.write('    '.join(row) + "\n")
 		f.close()
+	
+	def list_representation(self):
+		return self.rows
 
 def main():
 	Ethanol = XYZ()
 	Ethanol.load('ethanol.xyz')
 	Ethanol.normalize_coordinates()
 	Ethanol.export('ethanol2.xyz')
+
+	Test = XYZ()
+	Test.load('test.xyz')
+	Ethanol.add(Test)
 
 if __name__ == '__main__':
 	main()
