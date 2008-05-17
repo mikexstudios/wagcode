@@ -25,16 +25,6 @@ upper_left_surface_atom  = Struct(x =  1.69501, y =  0.71964, z = 31.50097) #In 
 lower_right_surface_atom = Struct(x = 14.68505, y = 15.51403, z = 31.51654) 
 placement_z_distance_from_surface = 1.8141 #The distance of our 'to place' molecule from the surface. 
 molecule_placement = [      #Use 1 to indicate placement of the molecule, 0 is vacant spot.
-		[1, 0, 0, 0, 0, 1],
-		[1, 0, 0, 0, 0, 0],
-		[1, 0, 0, 0, 0, 0]
-		];
-molecule_placement = [      #Use 1 to indicate placement of the molecule, 0 is vacant spot.
-		[1, 1, 1, 1, 1, 1],
-		[1, 1, 1, 1, 1, 1],
-		[1, 1, 1, 1, 1, 1]
-		]
-molecule_placement = [      #Use 1 to indicate placement of the molecule, 0 is vacant spot.
 		[1, 1, 1],
 		[1, 1, 1],
 		[1, 1, 1],
@@ -44,7 +34,6 @@ molecule_placement = [      #Use 1 to indicate placement of the molecule, 0 is v
 		]
 
 #Calculated Arguments
-number_of_target_atoms = Struct() #Not really used besides in initialize. Should remove later.
 spacing_of_target_atoms = Struct()
 surface = XYZ()
 place_molecule = XYZ()
@@ -64,10 +53,11 @@ def main():
 def initialize():
 	global upper_left_surface_atom, lower_right_surface_atom
 	global molecule_placement
-	global number_of_target_atoms, spacing_of_target_atoms
+	global spacing_of_target_atoms
 	global place_xyz_file, place_molecule
 	global surface_xyz_file, surface
 	
+	number_of_target_atoms = Struct() 
 	number_of_target_atoms.x = len(molecule_placement[0])
 	number_of_target_atoms.y = len(molecule_placement)
 	#print number_of_target_atoms.x
@@ -85,6 +75,9 @@ def initialize():
 	place_molecule.normalize_coordinates() #Make the molecule start from (0,0,0)
 	#Make the molecule start from the upper left position
 	place_molecule.translate(upper_left_surface_atom.x, upper_left_surface_atom.y, upper_left_surface_atom.z)
+	
+	#Testing rotation:
+	place_molecule.rotate_wrt_atom(5, 'z', 90.0)
 
 def place_surface_molecules():
 	global molecule_placement

@@ -11,6 +11,7 @@ __copyright__ = 'General Public License (GPL)'
 
 #from numpy import *
 #import numpy
+import math
 from Struct import *
 
 #Defining the format for XYZ file
@@ -98,6 +99,7 @@ class XYZ:
 	def rotate(self, with_respect_to_coord, axis, angle):
 		#Determine which rotation matrix to use. We could use an all inclusive matrix
 		#but I think this is easier:
+		w = math.radians(angle) #The sin's and cos' use radian
 		if axis == 'x':
 			rotation_matrix = [
 				[1.0, 0.0, 0.0],
@@ -124,11 +126,33 @@ class XYZ:
 		
 		#Apply rotation
 		for index in xrange(len(self.rows)): #We don't need a copy of the row
-			self.rows[index] = self.__multiply_matrix_by_vector(rotation_matrix, self.rows[index])
+			print self.rows[index]
+			temp_row = self.rows[index][:1] #We have to create a temp since .extend() doesn't return.
+			temp_row.extend(self.__multiply_matrix_by_vector(rotation_matrix, self.rows[index][1:]))
+			self.rows[index] = temp_row
+			del temp_row
+			print self.rows[index]
 
 		#Undo the translation
 		self.translate(with_respect_to_coord.x, with_respect_to_coord.y, with_respect_to_coord.z)
+	
+	'''
+	Rotates all atoms about some given atom.
 
+	@param integer Atom number (note that counting starts at 1).
+	'''
+	def rotate_wrt_atom(self, atom_number, axis, angle):
+		if atom_number < 1 and atom_number > len(self.rows):
+			return #Do nothing
+
+		#Get the coordinates of the given atom. Minus 1 because we
+		#start atom counting at 1 instead of 0.
+		center_coord = Struct()
+		center_coord.x = self.rows[atom_number-1][1]
+		center_coord.y = self.rows[atom_number-1][2]
+		center_coord.z = self.rows[atom_number-1][3]
+		return self.rotate(center_coord, axis, angle)
+	
 	'''
 	Adds an XYZ object to this one.
 
@@ -173,7 +197,7 @@ class XYZ:
 	@param vector
 	@return list multiplied vector
 	'''
-	def __multiply_matrix_by_vector(m, v):
+	def __multiply_matrix_by_vector(self, m, v):
 		nrows = len(m)
 		ncols = len(m[0])
 		w = [None] * nrows
