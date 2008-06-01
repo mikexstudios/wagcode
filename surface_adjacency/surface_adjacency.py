@@ -13,7 +13,7 @@ import math #for ceil
 import sqlite3
 
 #Arguments
-max_horizontal_spots = 6 #This allows us to convert the long string into an array of strings.
+max_horizontal_spots = 2 #This allows us to convert the long string into an array of strings.
 horizontal_adj_energy_cost = 10 #kcal/mol
 vertical_adj_energy_cost = 1 #kcal/mol
 db_file = 'surface_adjacency2.db'
@@ -45,6 +45,40 @@ def convert_bin_string_to_list(bin_string):
 	
 	return bin_list
 
+'''
+Increase the surface by one spot in each direction to create a periodic effect.
+'''
+def feather_surface_periodic(surf_rep):
+	new_surf_rep = surf_rep[:]
+	#Add bottom row before top row
+	new_surf_rep.reverse()
+	new_surf_rep.append(surf_rep[-1])
+	new_surf_rep.reverse()
+	#Add top row after bottom row
+	new_surf_rep.append(surf_rep[0])
+	#print new_surf_rep
+
+	#Interchange rows with columns so that we can easily do the next part
+	#inverted_surf_rep = transpose_list(surf_rep)
+	inverted_new_surf_rep = transpose_list(new_surf_rep)
+	inverted_surf_rep = inverted_new_surf_rep[:]
+
+	#Add right column before left column
+	inverted_new_surf_rep.reverse()
+	inverted_new_surf_rep.append(inverted_surf_rep[-1])
+	inverted_new_surf_rep.reverse()
+	#Add left column after right column
+	inverted_new_surf_rep.append(inverted_surf_rep[0])
+	
+	#print transpose_list(inverted_new_surf_rep)
+
+	return transpose_list(inverted_new_surf_rep)
+
+#From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/410687
+def transpose_list(lists):
+   if not lists: return []
+   return map(lambda *row: list(row), *lists)
+
 def evaluate_adjacencies(surf_rep):
 	#Go through 2D array and determine the horizontal and vertical adjacencies
 	#at each element. Then remove that element. Note that we are treating this 
@@ -54,6 +88,45 @@ def evaluate_adjacencies(surf_rep):
 
 	for row_index, row in enumerate(surf_rep):
 		for spot_index, each_spot in enumerate(row):
+			if each_spot == 1:
+				#Check adjacent spots. We use modulus to create the periodic
+				#wrap around effect. ie. 0%2=0, 1%2=1, 2%2=0, 3%2=1, 4%2=0.
+				if surf_rep[row_index][(spot_index-1) % len(row)] == 1:
+					horizontal_adjacencies += 1
+				if surf_rep[row_index][(spot_index+1) % len(row)] == 1:
+					horizontal_adjacencies += 1
+				#if surf_rep[row_index][(spot_index+1) % len(row)] == 1:
+				#	horizontal_adjacencies += 1
+				if surf_rep[(row_index-1) % len(surf_rep)][spot_index] == 1:
+					vertical_adjacencies += 1
+				if surf_rep[(row_index+1) % len(surf_rep)][spot_index] == 1:
+					vertical_adjacencies += 1
+
+				#Now that we are done, remove the element we are looking at:
+				surf_rep[row_index][spot_index] = 0
+
+	return [horizontal_adjacencies, vertical_adjacencies]		
+
+def evaluate_adjacencies2(surf_rep):
+	#Go through 2D array and determine the horizontal and vertical adjacencies
+	#at each element. Then remove that element. Note that we are treating this 
+	#like a periodic surface.
+	horizontal_adjacencies = 0
+	vertical_adjacencies = 0
+
+	#Fake periodicity by actually increasing all the sides by 1 spot:
+	surf_rep = feather_surface_periodic(surf_rep)
+	#print surf_rep
+
+	for row_index, row in enumerate(surf_rep):
+		#Skip the first and last row (put there by faking perodicity):
+		if row_index == 0 or row_index == len(surf_rep)-1:
+			continue #Go to the next one, don't evaluate
+		for spot_index, each_spot in enumerate(row):
+			#Skip the first and last columns (put there by faking periodicity):
+			if spot_index == 0 or spot_index == len(row)-1:
+				continue #Go to next one, don't evaluate
+
 			if each_spot == 1:
 				#Check adjacent spots. We use modulus to create the periodic
 				#wrap around effect. ie. 0%2=0, 1%2=1, 2%2=0, 3%2=1, 4%2=0.
@@ -116,15 +189,16 @@ def main():
 		''')
 
 	#print binary_string_permutation(6)
-	#placed_mol_binary_rep = binary_string_permutation(4)
-	placed_mol_binary_rep = ['111111111111111111']
+	placed_mol_binary_rep = binary_string_permutation(4)
+	#placed_mol_binary_rep = ['111111111111111111']
+	#placed_mol_binary_rep = ['0011']
 
 	#Now we go through each one and evaulate the adjacencies
 	for each_bin_rep in placed_mol_binary_rep:
 		#Convert to 2 array of our surface sites:
 		each_surf_rep = convert_bin_string_to_list(each_bin_rep)
 		num_mol = get_num_occupied_spots(each_surf_rep)
-		adjacencies = evaluate_adjacencies(each_surf_rep)
+		adjacencies = evaluate_adjacencies2(each_surf_rep)
 		score = score_adjacencies(adjacencies[0], adjacencies[1])
 
 		#Insert into db:
