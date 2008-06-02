@@ -48,7 +48,7 @@ def main():
 		exit()
 	
 	f = file(output_file, 'w')
-	f.write('Best of each number of molecules:')
+	f.write("Best of each number of molecules:\n")
 	f.write("# Mol \t Config \t Horiz. Adj. \t Vert. Adj. \t Score\n")
 	f.write("----------------------------------------------------------------\n")
 	#Make a table of the best score in each category:
@@ -57,7 +57,7 @@ def main():
 		db.execute('''
 			SELECT * FROM surf_configuration
 		    WHERE num_mol = ?
-			ORDER BY score DESC
+			ORDER BY score ASC
 			LIMIT 1
 			''', (each_num_mol,))
 		row = db.fetchone()
