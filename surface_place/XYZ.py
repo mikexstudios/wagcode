@@ -14,12 +14,6 @@ __copyright__ = 'General Public License (GPL)'
 import math
 from Struct import *
 
-#Defining the format for XYZ file
-ATOM_INDEX = 0
-X_INDEX = 1
-Y_INDEX = 2
-Z_INDEX = 3
-
 class XYZ:
 
 	def __init__(self):
