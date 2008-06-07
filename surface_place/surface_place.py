@@ -80,9 +80,9 @@ class Surface_place:
 							row_index * self.spacing_of_target_atoms.y,
 							self.placement_z_distance_from_surface
 							)
-					print spot_index * self.spacing_of_target_atoms.x
-					print row_index * self.spacing_of_target_atoms.y
-					print self.placement_z_distance_from_surface
+					#print spot_index * self.spacing_of_target_atoms.x
+					#print row_index * self.spacing_of_target_atoms.y
+					#print self.placement_z_distance_from_surface
 					self.surface.add(temp_place_molecule)
 					del temp_place_molecule #Don't need it since we added to the surface
 
