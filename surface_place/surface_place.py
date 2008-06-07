@@ -24,7 +24,12 @@ output_xyz_file = 'placed.xyz'
 upper_left_surface_atom  = Struct(x =  1.69501, y =  0.71964, z = 31.50097) #In Angstroms
 lower_right_surface_atom = Struct(x = 14.68505, y = 15.51403, z = 31.51654) 
 placement_z_distance_from_surface = 1.8141 #The distance of our 'to place' molecule from the surface. 
-molecule_placement = [      #Use 1 to indicate placement of the molecule, 0 is vacant spot.
+#Molecule placement: Use 1 to indicate placement of the molecule, 0 is vacant spot. If you want to
+# rotate the molecule, enter a list that takes the arguments: 
+# [1, (int) atom to rotate wrt, (str) axis, (float) degrees]
+# ie. To rotate EtOH molecule about its O molecule along the z axis 180 degrees:
+#     [1, 5, 'z', 180]
+molecule_placement = [      
 		[1, 1, 1],
 		[1, 1, 1],
 		[1, 1, 1],
@@ -69,7 +74,7 @@ def initialize():
 	#print spacing_of_target_atoms.x
 	#print spacing_of_target_atoms.y
 	
-	#Load our surface and place molecule
+	#Load our surface and molecule placing position
 	surface.load(surface_xyz_file)	
 	place_molecule.load(place_xyz_file)
 	place_molecule.normalize_coordinates() #Make the molecule start from (0,0,0)
@@ -77,7 +82,7 @@ def initialize():
 	place_molecule.translate(upper_left_surface_atom.x, upper_left_surface_atom.y, upper_left_surface_atom.z)
 	
 	#Testing rotation:
-	place_molecule.rotate_wrt_atom(5, 'z', 90.0)
+	#place_molecule.rotate_wrt_atom(5, 'z', 90.0)
 
 def place_surface_molecules():
 	global molecule_placement
@@ -87,12 +92,23 @@ def place_surface_molecules():
 
 	for row_index, row in enumerate(molecule_placement):
 		for spot_index, each_spot in enumerate(row):
+			#We check for any list type first so that we can make modifications
+			#before doing translation and placing.
+			if each_spot != 0:
+				temp_place_molecule = copy.deepcopy(place_molecule)
+
+			if [].__class__ == type(each_spot): #If it is a list
+				print 'Rotating molecule: '+str(each_spot[1])
+				#Rotate the molecule
+				temp_place_molecule.rotate_wrt_atom(each_spot[1], each_spot[2], each_spot[3]) 
+				each_spot = each_spot[0] #Set equal to just an integer so we can translate it later
+				
+			#if type(1) == type(each_spot): #If integer
 			if each_spot == 1:
 				print 'Placing molecule at: ('+str(spot_index)+', '+str(row_index)+')'
 				#We have a spot marked for placement. Let's place the molecule
 				#Note: We *must* use deepcopy since the XYZ class uses lists which
 				#      are references.
-				temp_place_molecule = copy.deepcopy(place_molecule)
 				temp_place_molecule.translate( #In initialize, we already translated to upper left position.
 						spot_index * spacing_of_target_atoms.x,
 						row_index * spacing_of_target_atoms.y,
@@ -103,7 +119,7 @@ def place_surface_molecules():
 				print placement_z_distance_from_surface
 				surface.add(temp_place_molecule)
 				del temp_place_molecule #Don't need it since we added to the surface
-
+				
 
 if __name__ == '__main__':
     main()

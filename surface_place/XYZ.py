@@ -126,12 +126,12 @@ class XYZ:
 		
 		#Apply rotation
 		for index in xrange(len(self.rows)): #We don't need a copy of the row
-			print self.rows[index]
+			#print self.rows[index]
 			temp_row = self.rows[index][:1] #We have to create a temp since .extend() doesn't return.
 			temp_row.extend(self.__multiply_matrix_by_vector(rotation_matrix, self.rows[index][1:]))
 			self.rows[index] = temp_row
 			del temp_row
-			print self.rows[index]
+			#print self.rows[index]
 
 		#Undo the translation
 		self.translate(with_respect_to_coord.x, with_respect_to_coord.y, with_respect_to_coord.z)
