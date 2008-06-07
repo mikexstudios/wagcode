@@ -11,7 +11,7 @@ __author__ = 'Michael Huynh (mikeh@caltech.edu)'
 __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
 
-class Struct():
+class Struct:
 	def __init__(self, *args, **kwargs):
 		for k, v in kwargs.items():
 			setattr(self, k, v)

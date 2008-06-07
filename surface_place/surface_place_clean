@@ -1,0 +1,5 @@
+#!/bin/bash
+rm 0etoh.xyz placed_eto_orientation.xyz Struct.py XYZ.py 
+rm etoh_place.py placed_h_orientation.xyz surface_place.py
+
+
