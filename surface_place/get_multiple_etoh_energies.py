@@ -12,6 +12,7 @@ __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
 
 import os
+import time #For sleep
 
 #Arguments
 folder_name_format = 'em_etoh01_[angle]deg'
@@ -29,6 +30,15 @@ def main():
 		cmd = os.popen("grep '^ENERGY' "+current_folder_name+"/fort.90")
 		energy_line = cmd.read()
 		cmd.close()
+		#Also string all of the xmolout files together:
+		os.system('cat '+current_folder_name+'/xmolout >> angle_energies.xmol')
+		#print 'cat '+current_folder_name+'/xmolout >> angle_energies.xmol'
+		#ftemp = file('angle_energies.xmol', 'a')
+		#ftemp.write("\n")
+		#ftemp.close()
+		#time.sleep(1) #Seems that system is forking processes so we want to wait for finish.
+		#os.system('echo "\n" >> angle_energies.xmol')
+		#time.sleep(1) #Seems that system is forking processes so we want to wait for finish.
 		#Remove the ENERGY part:
 		energy_line = energy_line.replace('ENERGY', '')
 		energy_line = energy_line.strip() #Trim whitespace
