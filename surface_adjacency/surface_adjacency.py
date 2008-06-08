@@ -45,36 +45,36 @@ def convert_bin_string_to_list(bin_string):
 	
 	return bin_list
 
-'''
-Increase the surface by one spot in each direction to create a periodic effect.
-'''
-def feather_surface_periodic(surf_rep):
-	new_surf_rep = surf_rep[:]
-	#Add bottom row before top row
-	new_surf_rep.reverse()
-	new_surf_rep.append(surf_rep[-1])
-	new_surf_rep.reverse()
-	#Add top row after bottom row
-	new_surf_rep.append(surf_rep[0])
-
-	#Interchange rows with columns so that we can easily do the next part
-	#inverted_surf_rep = transpose_list(surf_rep)
-	inverted_new_surf_rep = transpose_list(new_surf_rep)
-	inverted_surf_rep = inverted_new_surf_rep[:]
-
-	#Add right column before left column
-	inverted_new_surf_rep.reverse()
-	inverted_new_surf_rep.append(inverted_surf_rep[-1])
-	inverted_new_surf_rep.reverse()
-	#Add left column after right column
-	inverted_new_surf_rep.append(inverted_surf_rep[0])
-	
-	return transpose_list(inverted_new_surf_rep)
-
-#From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/410687
-def transpose_list(lists):
-   if not lists: return []
-   return map(lambda *row: list(row), *lists)
+#'''
+#Increase the surface by one spot in each direction to create a periodic effect.
+#'''
+#def feather_surface_periodic(surf_rep):
+#	new_surf_rep = surf_rep[:]
+#	#Add bottom row before top row
+#	new_surf_rep.reverse()
+#	new_surf_rep.append(surf_rep[-1])
+#	new_surf_rep.reverse()
+#	#Add top row after bottom row
+#	new_surf_rep.append(surf_rep[0])
+#
+#	#Interchange rows with columns so that we can easily do the next part
+#	#inverted_surf_rep = transpose_list(surf_rep)
+#	inverted_new_surf_rep = transpose_list(new_surf_rep)
+#	inverted_surf_rep = inverted_new_surf_rep[:]
+#
+#	#Add right column before left column
+#	inverted_new_surf_rep.reverse()
+#	inverted_new_surf_rep.append(inverted_surf_rep[-1])
+#	inverted_new_surf_rep.reverse()
+#	#Add left column after right column
+#	inverted_new_surf_rep.append(inverted_surf_rep[0])
+#	
+#	return transpose_list(inverted_new_surf_rep)
+#
+##From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/410687
+#def transpose_list(lists):
+#   if not lists: return []
+#   return map(lambda *row: list(row), *lists)
 
 def evaluate_adjacencies(surf_rep):
 	#Go through 2D array and determine the horizontal and vertical adjacencies
@@ -84,17 +84,17 @@ def evaluate_adjacencies(surf_rep):
 	vertical_adjacencies = 0
 
 	#Fake periodicity by actually increasing all the sides by 1 spot:
-	surf_rep = feather_surface_periodic(surf_rep)
+	#surf_rep = feather_surface_periodic(surf_rep)
 	#print surf_rep
 
 	for row_index, row in enumerate(surf_rep):
 		#Skip the first and last row (put there by faking perodicity):
-		if row_index == 0 or row_index == len(surf_rep)-1:
-			continue #Go to the next one, don't evaluate
+		#if row_index == 0 or row_index == len(surf_rep)-1:
+		#	continue #Go to the next one, don't evaluate
 		for spot_index, each_spot in enumerate(row):
 			#Skip the first and last columns (put there by faking periodicity):
-			if spot_index == 0 or spot_index == len(row)-1:
-				continue #Go to next one, don't evaluate
+			#if spot_index == 0 or spot_index == len(row)-1:
+			#	continue #Go to next one, don't evaluate
 
 			if each_spot == 1:
 				#Check adjacent spots. We use modulus to create the periodic
