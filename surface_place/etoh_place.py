@@ -13,6 +13,7 @@ __copyright__ = 'General Public License (GPL)'
 from surface_place import *
 from Struct import * #Just a small class allowing us to create objects on the fly
 from XYZ import *
+import os
 
 
 def main():
@@ -78,14 +79,15 @@ def main():
 	
 		#Convert to BGF and energy minimize:
 		sh_fragment = '''
-		xtobw -d tio2_6x6 [output_name].xyz
-		mkdir em
-		mv [output_name].bgf em/
-		cd em
-		ln -s [output_name].bgf geo
-		createem
-		mkreaxsub [output_name]
-		rqsub hive reax.run
+xtobw -d tio2_6x6 [output_name].xyz
+mkdir em_[output_name]
+mv [output_name].bgf em_[output_name]/
+cd em_[output_name]
+ln -s [output_name].bgf geo
+createem
+mkreaxsub [output_name]
+rqsub hive reax.run
+cd ..
 		'''
 		(noext_filename, ext) = os.path.splitext(h_place.output_xyz_file)
 		#Replace sh_fragment above with our filename (without .xyz):
