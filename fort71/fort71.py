@@ -64,7 +64,7 @@ class fort71:
 			processed_rows.append(self.process_line(row))
 			if len(processed_rows) > (end-beg): #> instead of >= since we want to include the end row
 				break
-		print processed_rows
+		#print processed_rows
 		#Sum the energies
 		total = 0
 		for row in processed_rows:
@@ -80,7 +80,7 @@ class fort71:
 		#return
 		sum_of_squares = sum(dev_from_mean_squared)
 		#Square root (because it's RMS value):
-		stdev = math.sqrt(sum_of_squares)
+		stdev = math.sqrt(sum_of_squares/len(processed_rows))
 
 		return (aver, stdev)
 
@@ -91,7 +91,7 @@ def main():
 	t = fort71()
 	t.load('fort.71')
 	print t.get_total_lines()
-	print t.get_energy_average_and_sdev(1, 2)
+	print t.get_energy_average_and_sdev(1, t.get_total_lines())
 
 if __name__ == '__main__':
 	main()
