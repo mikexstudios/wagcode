@@ -11,8 +11,9 @@ initial_structure = 'test.bgf'
 #################################################################################
 #Now we define each of our simulations which will occur in the order in which
 #they are defined (ie. simulation[0] will occur first, then simulation[1], etc.).
-#Things you can use inside of strings:
+#Things you can use inside of strings (you can define your own below):
 #[base_name] - is the initial_structure string minus the end extension
+string_substitutions['[base_name]'] = os.path.splitext(initial_structure)[0]
 #################################################################################
 
 #Path to folder containing files for this simulation.
