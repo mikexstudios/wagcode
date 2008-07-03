@@ -1,0 +1,35 @@
+############################################################
+# Configuration file for ReaxFF Automator
+# To use: reax_automator [this_config_file]
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+############################################################
+
+#Path to the initial structure (in BGF format).
+initial_structure = 'test.bgf'
+
+#################################################################################
+#Now we define each of our simulations which will occur in the order in which
+#they are defined (ie. simulation[0] will occur first, then simulation[1], etc.).
+#Things you can use inside of strings:
+#[base_name] - is the initial_structure string minus the end extension
+#################################################################################
+
+#Path to folder containing files for this simulation.
+simulation[0]['simulation_folder'] = '[base_name]_templates/em'
+#Output folder. Defaults to the name of initial structure without file extension.
+simulation[0]['output_folder'] = '[base_name]'
+#Final structure name (optional). Creates a name for the final fort.90 file. Naming
+#the final structure is a good way of allowing structures to be easily identifiable.
+simulation[0]['final_structure_name'] = '[base_name]_em.bgf'
+
+simulation[1]['simulation_folder'] = '[base_name]_templates/anneal'
+simulation[1]['output_folder'] = 'anneal'
+simulation[1]['final_structure_name'] = '[base_name]_anneal.bgf'
+
+simulation[2]['simulation_folder'] = '[base_name]_templates/em'
+simulation[2]['output_folder'] = 'em'
+simulation[2]['final_structure_name'] = '[base_name]_anneal_em.bgf'
+simulation[2]['link_final_structure_to'] = 'final_structures'
+
+#End of simulations
