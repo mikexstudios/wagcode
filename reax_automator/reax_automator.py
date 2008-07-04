@@ -10,7 +10,8 @@ __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
 
 import sys #For arguments
-import os.path #For file exist check and splitext
+import os #For file exist check and splitext and path stuff
+import shutil
 
 #Automator control file:
 control_file_path = sys.argv[1]
@@ -46,4 +47,45 @@ def temp_replace_tags(in_dict):
 	return temp_dict
 simulation = map(temp_replace_tags, simulation) #Apply the func. to each simulation list element
 
-print simulation
+#print simulation
+
+#Now do stuff:
+last_structure_folder = os.getcwd() #No trailing slash.
+last_structure_filename = initial_structure #Assume initial_structure is same for both path and filename.
+for each_sim in simulation:
+	#Create output folder
+	#if os.path.isdir(each_sim['output_folder']) == False:
+	#	os.mkdir(each_sim['output_folder'])
+	
+	#Copy simulation files over. New folder will be created.
+	shutil.copytree(each_sim['simulation_folder'], each_sim['output_folder'])
+
+	#If first simulation, we copy initial structure over. Otherwise, copy last
+	#structure over.
+	shutil.copy(last_structure_path, each_sim['output_folder']) #file will be created in directory
+
+	#Link last structure to geo. If windows, then we copy file instead of symlink:
+	#if os.name == 'nt':
+	#	shutil.copy(each_sim['output_folder']+'/'+last_structure_filename, each_sim['output_folder']+'/geo')
+	#else:
+	os.symlink(each_sim['output_folder']+'/'+last_structure_filename, each_sim['output_folder']+'/geo')
+	
+	#TODO: Do any extra stuff to the control file
+
+	#Create submission script:
+	filename_no_ext = os.path.splitext(last_structure_filename)[0]
+	os.system('mkreaxsub '+filename_no_ext)
+
+	#Submit the simulation
+	if os.path.exists(last_structure_folder+'/reax.run'):
+		os.system('rqsub '+submit_to_cluster+' reax.run')
+	else:
+		print 'ERROR: reax.run not found!'
+		exit(1)
+	
+	#Get simulation information
+	simulation_submit_number = 
+
+	#Monitor the simulation until it has completed.
+		
+	

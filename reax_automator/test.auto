@@ -1,12 +1,17 @@
 ############################################################
 # Configuration file for ReaxFF Automator
 # To use: reax_automator [this_config_file]
+# (Need to run reax_automator in the same directory as
+#  config file.)
 # Note: This file will be sourced into a python script so
 #       make sure you have correct syntax here.
 ############################################################
 
-#Path to the initial structure (in BGF format).
+#Filename of the initial structure (in BGF format).
 initial_structure = 'test.bgf'
+
+#Cluster to run the simulations on.
+submit_to_cluster = 'hive'
 
 #################################################################################
 #Now we define each of our simulations which will occur in the order in which
