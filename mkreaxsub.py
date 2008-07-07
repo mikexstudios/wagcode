@@ -24,6 +24,8 @@ directory. Cool features include:
 USAGE: mkreaxsub [pbs_name]
 
 CHANGELOG:
+0.2.4 (7 July 2008) - Added some more information reporting in the info.pbs
+                      file (Cluster, better output for Hostname).
 0.2.3 (23 March 2008) - Fixed problem in cp(from|to)node files where the second
                         rsh command needs to be wrapped in quotes.
 0.2.2 (14 March 2008) - Fixed problem in cp(from|to)node files where '*' wasn't
@@ -59,9 +61,15 @@ pbs_template = '''
 #!/bin/bash
 
 #Output some information related to this job:
+#sed is used to remove the extra information from the names.
+#We don't have access to $REMOTEHOST so we need to use the $PBS_O_HOST
+cluster_name=`echo $PBS_O_HOST | sed 's/\..*//g'`
+node_name=`echo $HOSTNAME | sed 's/\..*//g'`
 curr_dir=[currentpath]
+
 cd ${curr_dir}
-echo "${HOSTNAME}" > info.pbs
+echo "Cluster: ${cluster_name}" > info.pbs
+echo "Hostname: ${node_name}" > info.pbs
 echo "Job ID: ${PBS_JOBID}" >> info.pbs
 echo "Temp Directory: [pbstempdir]" >> info.pbs  
 
@@ -69,10 +77,6 @@ echo "Temp Directory: [pbstempdir]" >> info.pbs
 temp_dir=/temp1/${USER}/[pbstempdir]
 
 #Generate some small scripts for copying files to and from the node.
-#sed is used to remove the extra information from the names.
-#We don't have access to $REMOTEHOST so we need to use the $PBS_O_HOST
-cluster_name=`echo $PBS_O_HOST | sed 's/\..*//g'`
-node_name=`echo $HOSTNAME | sed 's/\..*//g'`
 env | grep hive
 echo "rsh ${cluster_name} \\"rsh ${node_name} cd ${temp_dir}\;"'$1"' > nodesh
 echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"cp ${curr_dir}/"'$1'" ${temp_dir}/\\\\\\"\\"" > cptonode
