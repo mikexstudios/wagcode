@@ -65,7 +65,7 @@ for each_sim in simulation:
 
 	#If first simulation, we copy initial structure over. Otherwise, copy last
 	#structure over.
-	shutil.copy(last_structure_path, each_sim['output_folder']) #file will be created in directory
+	shutil.copy(last_structure_filename, each_sim['output_folder']) #file will be created in directory
 
 	#Link last structure to geo. If windows, then we copy file instead of symlink:
 	#if os.name == 'nt':
@@ -125,7 +125,14 @@ for each_sim in simulation:
 					continue
 	
 	#Finishing steps for the simulation that ended to prepare it for the next simulation.
-
-
+	if os.path.exists('fort.90'):
+		try:
+			shutil.copy('fort.90', each_sim['final_structure_name'])
+			last_structure_filename = each_sim['final_structure_name']
+		except KeyError:
+			#Final structure name not defined
+			last_structure_filename = 'fort.90'
+			
+print 'Simulations successfully completed!'
 		
 	
