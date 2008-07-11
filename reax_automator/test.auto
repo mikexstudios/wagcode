@@ -7,11 +7,9 @@
 #       make sure you have correct syntax here.
 ############################################################
 
-#Filename of the initial structure (in BGF format).
-initial_structure = 'test.bgf'
-
-#Cluster to run the simulations on.
-submit_to_cluster = 'hive'
+#Filename of the initial structure (in BGF format). Currently set to
+#this filename replacing the .auto with .bgf
+initial_structure = os.path.splitext(os.path.basename(control_file_path))[0]+'.bgf'
 
 #################################################################################
 #Now we define each of our simulations which will occur in the order in which
@@ -22,18 +20,18 @@ string_substitutions['[base_name]'] = os.path.splitext(initial_structure)[0]
 #################################################################################
 
 #Path to folder containing files for this simulation.
-simulation[0]['simulation_folder'] = '[base_name]_templates/em'
+simulation[0]['simulation_folder'] = 'templates/em'
 #Output folder. Defaults to the name of initial structure without file extension.
 simulation[0]['output_folder'] = '[base_name]'
 #Final structure name (optional). Creates a name for the final fort.90 file. Naming
 #the final structure is a good way of allowing structures to be easily identifiable.
 simulation[0]['final_structure_name'] = '[base_name]_em.bgf'
 
-simulation[1]['simulation_folder'] = '[base_name]_templates/anneal'
+simulation[1]['simulation_folder'] = 'templates/anneal'
 simulation[1]['output_folder'] = 'anneal'
 simulation[1]['final_structure_name'] = '[base_name]_anneal.bgf'
 
-simulation[2]['simulation_folder'] = '[base_name]_templates/em'
+simulation[2]['simulation_folder'] = 'templates/em'
 simulation[2]['output_folder'] = 'em'
 simulation[2]['final_structure_name'] = '[base_name]_anneal_em.bgf'
 simulation[2]['link_final_structure_to'] = 'final_structures'
