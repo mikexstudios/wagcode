@@ -15,7 +15,7 @@ initial_structure = os.path.splitext(os.path.basename(control_file_path))[0]+'.b
 #Now we define each of our simulations which will occur in the order in which
 #they are defined (ie. simulation[0] will occur first, then simulation[1], etc.).
 #Things you can use inside of strings (you can define your own below):
-#[base_name] - is the initial_structure string minus the end extension
+# [base_name] - is the initial_structure string minus the end extension
 string_substitutions['[base_name]'] = os.path.splitext(initial_structure)[0]
 #################################################################################
 
@@ -29,6 +29,13 @@ simulation[0]['final_structure_name'] = '[base_name]_em.bgf'
 
 simulation[1]['simulation_folder'] = 'templates/anneal'
 simulation[1]['output_folder'] = 'anneal'
+#Replacements is a dictionary where the keys are the filename, values
+#are an array of search, replace tuples. If the replacement string starts
+#with eval: then whatever after that will be passed through eval() function
+#in python.
+simulation[1]['replacements'] = {
+        'tregime.in': [('[total_atoms]', "eval:get_total_atoms('geo')")]
+    }
 simulation[1]['final_structure_name'] = '[base_name]_anneal.bgf'
 
 simulation[2]['simulation_folder'] = 'templates/em'
