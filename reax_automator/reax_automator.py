@@ -56,6 +56,7 @@ while True:
 		simulation.append(dict())
 		continue #Re-read the execfile
 	break #Otherwise, there are no errors and we break out of this loop
+print 'Read control file successfully: '+control_file_path
 
 def main():
 	global control_file_path, job_id_sleep_time, monitor_error_threshold
@@ -76,7 +77,8 @@ def main():
 				temp_dict[sim_key] = sim_value.replace(sub_key, sub_value)
 		return temp_dict
 	simulation = map(temp_replace_tags, simulation) #Apply the func. to each simulation list element
-	
+	print 'Completed string substitutions...'
+
 	#Now do stuff:
 	base_folder = os.getcwd() #No trailing slash.
 	last_structure_folder = os.getcwd() #No trailing slash.
@@ -101,7 +103,9 @@ def main():
 		#Link last structure to geo. Note: The src argument is relative to
 		#the path specified in the dst argument for some strange reason.
 		os.symlink(last_structure_filename, 'geo')
-		
+	
+		print 'Copied over simulation files and structure: '+each_sim['simulation_folder']
+	
 		#Now do file replacement stuff:
 		try:
 			eval_regex = re.compile(r'^eval:(.+)')
@@ -119,6 +123,7 @@ def main():
 				temp_f.close()
 				f.close()
 				shutil.move(k+'.temp', k) #Replace file with our temp one
+			print 'Completed file replacements...'
 		except KeyError:
 			pass #Do nothing since this simulation did not define any replacements.
 		
@@ -145,13 +150,14 @@ def main():
 				
 			elif jobid_regex:
 				each_sim['job_id'] = int(jobid_regex.group(1))
+		print 'Got simulation information...'
 		
 		#Monitor the simulation until it has completed.
 		monitor_errors = 0
 		simulation_running = True
 		while simulation_running == True:
 			sq_cmd = os.popen('showq|grep $USER')
-			print 'New loop instance...'
+			#print 'New loop instance...'
 			#Sample line:
 			#229142                mikeh    Running     4 30:12:19:22  Thu Jun 26 10:15:25
 			#This is the case where we only had one simulation running and
@@ -197,6 +203,13 @@ def main():
 			except KeyError:
 				#Final structure name not defined
 				last_structure_filename = 'fort.90'
+
+		#Run finishing function if defined:
+		try:
+			eval(each_sim['finishing_function'])
+			print 'Executed finishing function: '+each_sim['finishing_function']
+		except KeyError:
+			pass #Do nothing
 				
 	print 'Simulations successfully completed!'
 
