@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/exec/python/python-2.4.2/bin/python -u
 '''
 reax_automator.py
 -----------------
@@ -17,7 +17,7 @@ import re #For regex
 
 #Arguments
 control_file_path = sys.argv[1] #Automator control file
-job_id_sleep_time = 1 #Minutes
+job_id_sleep_time = 5 #Minutes
 monitor_error_threshold = 3 #Number of times errors can occur in succession during monitoring before exit
 
 #Need to put this function before control file reading so that
@@ -139,7 +139,7 @@ def main():
 		else:
 			print 'ERROR: reax.run not found!'
 			exit(1)
-		
+				
 		#Get simulation information
 		info_f = file('info.pbs')
 		for line in info_f:
