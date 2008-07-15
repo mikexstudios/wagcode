@@ -17,7 +17,7 @@ import re #For regex
 
 #Arguments
 control_file_path = sys.argv[1] #Automator control file
-job_id_sleep_time = 5 #Minutes
+job_id_sleep_time = 1 #Minutes
 monitor_error_threshold = 3 #Number of times errors can occur in succession during monitoring before exit
 
 #Need to put this function before control file reading so that
@@ -61,7 +61,7 @@ print 'Read control file successfully: '+control_file_path
 def main():
 	global control_file_path, job_id_sleep_time, monitor_error_threshold
 	global initial_structure, simulation, string_substitutions
-	
+
 	#Now do the replaces for our strings:
 	def temp_replace_tags(in_dict):
 		global string_substitutions
@@ -131,33 +131,48 @@ def main():
 		filename_no_ext = os.path.splitext(last_structure_filename)[0]
 		os.system('mkreaxsub '+filename_no_ext)
 	
-		#Submit the simulation
+		#Submit the simulation and get simulation information
 		if os.path.exists('reax.run'):
-			os.system('qsub reax.run')
+			#os.system('qsub reax.run')
+			qsub_cmd = os.popen('qsub reax.run')
+			time.sleep(1) #Second
+			for line in qsub_cmd:
+				jobid_regex = re.match(r'(\d+).*', line)
+				if jobid_regex:
+					each_sim['job_id'] = int(jobid_regex.group(1))
+					print 'Got simulation job id: '+str(each_sim['job_id'])
+			qsub_cmd.close()
 			#Wait a bit (so that info.pbs can be generated)
-			time.sleep(10) #Seconds
+			time.sleep(5) #Seconds
 		else:
 			print 'ERROR: reax.run not found!'
 			exit(1)
+
+		#Double check that we have the job id
+		try: each_sim['job_id']
+		except KeyError:
+			print 'ERROR: Could not determine job id!'
+			sys.exit(1)
 				
-		#Get simulation information
-		info_f = file('info.pbs')
-		for line in info_f:
-			cluster_regex = re.match(r'Cluster: (\s+)', line)
-			jobid_regex = re.match(r'Job ID: (\d+).*', line)
-			if cluster_regex:
-				each_sim['cluster_name'] = cluster_regex.group(1)
-				
-			elif jobid_regex:
-				each_sim['job_id'] = int(jobid_regex.group(1))
-		print 'Got simulation information...'
+		#If we couldn't get simulation information from submitting, then try
+		#to get it from the info.pbs file.
+		#info_f = file('info.pbs')
+		#for line in info_f:
+		#	cluster_regex = re.match(r'Cluster: (\s+)', line)
+		#	jobid_regex = re.match(r'Job ID: (\d+).*', line)
+		#	if cluster_regex:
+		#		each_sim['cluster_name'] = cluster_regex.group(1)
+		#		
+		#	elif jobid_regex:
+		#		each_sim['job_id'] = int(jobid_regex.group(1))
+		#print 'Got simulation information...'
 		
 		#Monitor the simulation until it has completed.
 		monitor_errors = 0
-		simulation_running = True
-		while simulation_running == True:
+		while True:
+			simulation_running = False #Used to determine if we found the simulation in showq
+			
 			sq_cmd = os.popen('showq|grep $USER')
-			#print 'New loop instance...'
 			#Sample line:
 			#229142                mikeh    Running     4 30:12:19:22  Thu Jun 26 10:15:25
 			#This is the case where we only had one simulation running and
@@ -168,6 +183,7 @@ def main():
 			else:
 				#There is no seek, so we reissue the command as a means
 				#to reset.
+				sq_cmd.close() #kill previous process
 				sq_cmd = os.popen('showq|grep $USER')
 	
 			for line in sq_cmd:
@@ -175,15 +191,19 @@ def main():
 				#Need to check sq_jobid_regex first in case we didn't match.
 				if sq_jobid_regex and int(sq_jobid_regex.group(1)) == each_sim['job_id']:
 					#Job is still running. Sleep for a while.
+					simulation_running = True
 					print 'Simulation still running...'
-					time.sleep(60*job_id_sleep_time) #In seconds
 					monitor_errors = 0 #reset our errors
 					break #Out of for loop
-				elif os.path.exists('fort.90') and os.path.exists('fort.71'):
+			#sq_cmd.close() #If these processes aren't killed, showq will fail
+			#Well, seems that it automatically closes if you read the command
+			#in a for loop.
+
+			if simulation_running == False:
+				if os.path.exists('fort.90') and os.path.exists('fort.71'):
 					#Simulation is complete. Breakout
 					print 'Simulation complete!'
-					simulation_running = False #Break out of while loop
-					break
+					break #Break out of while loop
 				else:
 					print 'Error in monitoring: '+str(monitor_errors)
 					#Must be an error
@@ -192,8 +212,8 @@ def main():
 						sys.exit(1)
 					else:
 						monitor_errors += 1
-						time.sleep(60*job_id_sleep_time) #sec
-						break
+			
+			time.sleep(60*job_id_sleep_time) #In seconds
 		
 		#Finishing steps for the simulation that ended to prepare it for the next simulation.
 		if os.path.exists('fort.90'):
