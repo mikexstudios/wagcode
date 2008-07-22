@@ -20,7 +20,7 @@ import os #uses path and rename stuff
 import time #for sleep
 
 #Parse command line options
-usage = 'usage: %prog -cd [preset] -c "x y z" [file.xyz]'
+usage = 'usage: %prog -d [preset] -c "x y z" [file.xyz]'
 parser = OptionParser(usage=usage, version='%prog '+__version__)
 parser.add_option('-d', '--crystaldefault', dest='crystaldefault', 
                    help='Selects a crystal default cell dimensions.')
