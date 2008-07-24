@@ -14,10 +14,11 @@ __copyright__ = 'General Public License (GPL)'
 import os #for path.isfile
 import sqlite3
 import math #For convert_bin_string_to_list
+import create_twists
 
 #Arguments
 output_file = 'output_to_list.txt'
-max_horizontal_spots = 3 #This allows us to convert the long string into an array of strings.
+max_horizontal_spots = 6 #This allows us to convert the long string into an array of strings.
 db_file = 'surface_adjacency.db'
 
 def convert_bin_string_to_list(bin_string):
@@ -35,6 +36,10 @@ def convert_bin_string_to_list(bin_string):
 		bin_string = bin_string[max_horizontal_spots:] #Rest of the list
 	
 	return bin_list
+
+def transpose_list(lists):
+   if not lists: return []
+   return map(lambda *row: list(row), *lists)
 
 def main():
 	global output_file
@@ -64,7 +69,21 @@ def main():
 		row = db.fetchone()
 		#print str(row['num_mol'])+"\t"+str(row['config'])+"\t"+str(row['horizontal_adjacencies'])+\
 		#		"\t"+str(row['vertical_adjacencies'])+"\t"+str(row['score'])
-		f.write(str(convert_bin_string_to_list(row['config']))+", \n")
+		twisted_rep = create_twists.create_twists( \
+			#transpose_list(convert_bin_string_to_list(row['config'])) \
+			convert_bin_string_to_list(row['config']) \
+			)
+		twisted_rep = transpose_list(twisted_rep)
+
+		#Now go in and do string replaces for -1 entries:
+		twisted_rep = str(twisted_rep)
+		twisted_rep = twisted_rep.replace('-1', "[1,5,'z',180]")
+		#for row_index, row in enumerate(twisted_rep):
+		#	for spot_index, each_spot in enumerate(row):
+		#		if int(each_spot) == -1:
+		#			twisted_rep[row_index][spot_index] = "[1,5,'z',180]"
+
+		f.write(twisted_rep+", \n")
 	f.write("]\n")
 	f.close()
 	
