@@ -67,23 +67,20 @@ def main():
 			LIMIT 1
 			''', (each_num_mol,))
 		row = db.fetchone()
-		#print str(row['num_mol'])+"\t"+str(row['config'])+"\t"+str(row['horizontal_adjacencies'])+\
-		#		"\t"+str(row['vertical_adjacencies'])+"\t"+str(row['score'])
+		
+		#Uncomment if want twisted EtOH:
 		twisted_rep = create_twists.create_twists( \
-			#transpose_list(convert_bin_string_to_list(row['config'])) \
 			convert_bin_string_to_list(row['config']) \
 			)
 		twisted_rep = transpose_list(twisted_rep)
-
 		#Now go in and do string replaces for -1 entries:
 		twisted_rep = str(twisted_rep)
 		twisted_rep = twisted_rep.replace('-1', "[1,5,'z',180]")
-		#for row_index, row in enumerate(twisted_rep):
-		#	for spot_index, each_spot in enumerate(row):
-		#		if int(each_spot) == -1:
-		#			twisted_rep[row_index][spot_index] = "[1,5,'z',180]"
-
 		f.write(twisted_rep+", \n")
+		
+		#Uncomment if want non-twisted EtOH:
+		#f.write(str(convert_bin_string_to_list(row['config']))+", \n")
+
 	f.write("]\n")
 	f.close()
 	
