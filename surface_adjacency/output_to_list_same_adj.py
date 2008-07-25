@@ -17,7 +17,7 @@ import math #For convert_bin_string_to_list
 import create_twists
 
 #Arguments
-output_file = 'output_to_list.txt'
+output_file = 'output_to_list_same_adj.txt'
 max_horizontal_spots = 6 #This allows us to convert the long string into an array of strings.
 db_file = 'surface_adjacency.db'
 
@@ -57,27 +57,27 @@ def main():
 	
 	f = file(output_file, 'w')
 	f.write("eto_molecule_placements = [\n")
-	#Make a table of the best score in each category:
-	for each_num_mol in range(0,19): #0 to 18
-		#db.execute('SELECT * FROM surf_configuration WHERE num_mol = ? ORDER BY score DESC LIMIT 1', (each_num_mol,))
-		db.execute('''
-			SELECT * FROM surf_configuration
-		    WHERE num_mol = ?
-			ORDER BY score ASC
-			LIMIT 1
-			''', (each_num_mol,))
-		row = db.fetchone()
-		
+	##Make a table of the best score in each category:
+	#for each_num_mol in range(0,19): #0 to 18
+   	
+   	db.execute('''
+   		SELECT * FROM surf_configuration
+   	    WHERE num_mol = 15
+		AND score = 132
+   		ORDER BY Random()
+   		LIMIT 10
+   		''')
+	for row in db:
 		#Uncomment if want twisted EtOH:
-		twisted_rep = create_twists.create_twists( \
-			convert_bin_string_to_list(row['config']) \
-			)
-		twisted_rep = transpose_list(twisted_rep)
-		#Now go in and do string replaces for -1 entries:
-		twisted_rep = str(twisted_rep)
-		twisted_rep = twisted_rep.replace('-1', "[1,5,'z',180]")
-		f.write(twisted_rep+", \n")
-		
+   		twisted_rep = create_twists.create_twists( \
+   			convert_bin_string_to_list(row['config']) \
+   			)
+   		twisted_rep = transpose_list(twisted_rep)
+   		#Now go in and do string replaces for -1 entries:
+   		twisted_rep = str(twisted_rep)
+   		twisted_rep = twisted_rep.replace('-1', "[1,5,'z',180]")
+   		f.write(twisted_rep+", \n")
+   	
 		#Uncomment if want non-twisted EtOH:
 		#f.write(str(convert_bin_string_to_list(row['config']))+", \n")
 
