@@ -18,7 +18,7 @@ import re #For regex
 #Arguments
 control_file_path = sys.argv[1] #Automator control file
 job_id_sleep_time = 5 #Minutes
-monitor_error_threshold = 3 #Number of times errors can occur in succession during monitoring before exit
+monitor_error_threshold = 5 #Number of times errors can occur in succession during monitoring before exit
 
 #Need to put this function before control file reading so that
 #the control file can call this.
@@ -140,7 +140,7 @@ def main():
 				jobid_regex = re.match(r'(\d+).*', line)
 				if jobid_regex:
 					each_sim['job_id'] = int(jobid_regex.group(1))
-					print time.asctime(time.localtime())+'Got simulation job id: '+str(each_sim['job_id'])
+					print time.asctime(time.localtime())+' Got simulation job id: '+str(each_sim['job_id'])
 			qsub_cmd.close()
 			#Wait a bit (so that info.pbs can be generated)
 			time.sleep(5) #Seconds
@@ -192,7 +192,7 @@ def main():
 				if sq_jobid_regex and int(sq_jobid_regex.group(1)) == each_sim['job_id']:
 					#Job is still running. Sleep for a while.
 					simulation_running = True
-					print time.asctime(time.localtime())+'Simulation still running...'
+					print time.asctime(time.localtime())+' Simulation still running...'
 					monitor_errors = 0 #reset our errors
 					break #Out of for loop
 			#sq_cmd.close() #If these processes aren't killed, showq will fail
@@ -202,10 +202,10 @@ def main():
 			if simulation_running == False:
 				if os.path.exists('fort.90') and os.path.exists('fort.71'):
 					#Simulation is complete. Breakout
-					print time.asctime(time.localtime())+'Simulation complete!'
+					print time.asctime(time.localtime())+' Simulation complete!'
 					break #Break out of while loop
 				else:
-					print time.asctime(time.localtime())+'Error in monitoring: '+str(monitor_errors)
+					print time.asctime(time.localtime())+' Error in monitoring: '+str(monitor_errors)
 					#Must be an error
 					if monitor_errors >= monitor_error_threshold:
 						print 'ERROR: Unable to monitor simulation'
@@ -231,7 +231,7 @@ def main():
 		except KeyError:
 			pass #Do nothing
 				
-	print time.asctime(time.localtime())+'Simulations successfully completed!'
+	print time.asctime(time.localtime())+' Simulations successfully completed!'
 
 
 
