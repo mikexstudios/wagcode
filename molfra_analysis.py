@@ -12,12 +12,14 @@ NEW: Now also outputs a tsv file with total number of molecules.
 	 into gnuplot for easy plotting of tsv data.
 
 CHANGES:
+0.2.1 - Fixed bug where graph line color not matched with name (since
+        the name wasn't excluded).
 0.2.0 - Added option to exclude molecules from molfra plot. Also auto-
         generates graphs by running gnuplot.
 0.1.1 - Fixed line 147 regex to account for cases where Total Number
                   of molecules has extra whitespace.
 '''
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 __date__ = '30th July 2008'
 __author__ = 'Michael Huynh (mikeh@caltech.edu)'
 __website__ = 'http://www.mikexstudios.com'
@@ -100,9 +102,21 @@ fnummol.write("Iteration\tTotal Number of Molecules\n")
 #Get list of distinct molecules (1st pass).
 #Also write titles to the output file
 molnames = get_all_molecules(f)
-print "All distinct molecules ("+str(len(molnames))+" total): \n"
-print string.join(molnames, "\t")
-fout.write(string.join(molnames, "\t")+"\n")
+mol_dict = create_empty_mol_dict(molnames)
+
+#Delete the molecules we want to exclude.
+#print exclude_molecules
+for each_exclude in exclude_molecules:
+	try:
+		del mol_dict[each_exclude]
+		print 'Excluded '+each_exclude
+	except KeyError:
+		print 'ERROR: Molecule '+each_exclude+' could not be found, so '+\
+		      'not excluded'
+
+print "All distinct molecules ("+str(len(mol_dict.keys()))+" total): \n"
+print string.join(mol_dict.keys(), "\t")
+fout.write(string.join(mol_dict.keys(), "\t")+"\n")
 
 #Create GNUPlot file
 fgplot = open(gnuplot_file, 'w')
@@ -113,10 +127,10 @@ fgplot.write("set ylabel \"Number of Molecules\"\n")
 fgplot.write("set key outside below\n")
 fgplot.write("set data style linespoints\n")
 fgplot.write('plot ')
-for i, each_molname in enumerate(molnames):
+for i, each_molname in enumerate(mol_dict.keys()):
     fgplot.write("'"+output_file+"' u 1:"+str(i+2)+" title \""+each_molname+"\"")
     #Takes care of the last plot element (remove trailing ,)
-    if(i != len(molnames)-1):
+    if(i != len(mol_dict.keys())-1):
         fgplot.write(", ") 
 fgplot.write("\n")
 fgplot.write("set term png\n")
