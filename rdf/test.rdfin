@@ -1,0 +1,25 @@
+############################################################
+# Configuration file for RDF Calculator (for ReaxFF)
+# To use: reax_rdf [this_config_file]
+# (Need to run reax_rdf in the same directory as
+#  config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+############################################################
+
+#Filename of the ReaxFF output structure (in BGF format). Currently set to
+#this filename replacing the .rdfin with .xyz
+structure_file = os.path.splitext(control_file)[0]+'.xyz'
+
+#Connection table (default is fort.7 in ReaxFF output):
+connection_table_file = 'fort.7'
+
+#Unit cell dimensions. (x, y, z) in angstroms. Set to False if no periodic
+#boundary conditions are used.
+unit_cell = (19.45, 17.76, 50)
+
+#Bin size defines the range of r distances that will be grouped into 
+#one histogram bin. The larger this number, the magnitude of each 
+#bin will be larger. If this number is too small, then the magnitude 
+#of each bin will approach 1 and even 0!
+bin_size = 0.10 #Angstroms
