@@ -14,6 +14,15 @@ structure_file = os.path.splitext(control_file)[0]+'.xyz'
 #Connection table (default is fort.7 in ReaxFF output):
 connection_table_file = 'fort.7'
 
+#The atom which we are measuring from:
+from_atom = 'O'
+#The atom which we are measuring to:
+to_atom = 'H'
+#Exclude to_atom if it is connected to:
+#NOTE: to_atoms that are attached to the same molecule as the from_atom are
+#      automatically excluded
+exclude_to_atom_if_connected_to = ''
+
 #Unit cell dimensions. (x, y, z) in angstroms. Set to False if no periodic
 #boundary conditions are used.
 unit_cell = (19.45, 17.76, 50)
