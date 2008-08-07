@@ -136,15 +136,28 @@ def main():
 		g[distance_bin] = n/n_id
 	
 	#Now print it out with angstroms!
-	print "r \t g(r)"
-	for distance_bin, gr in g.iteritems():
+	#print "r \t g(r)"
+	#for distance_bin, gr in g.iteritems():
+	#	#The format syntax is that we have _____._____ (5 spots before the . and 5 spots
+	#	#after). This will cover like 99.99% of all numbers we encounter.
+	#	print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, gr)
+	#	#pass
+	
+	#Alternative method for printing it out. We print only for r <= 1/2 L, where L is
+	#the average length of all the sides of the box. According to Deserno's paper on
+	#calculating g(r) in 3-D, once we assume minimum image convention, the n_id term 
+	#no longer increases like how we defined it above. So g(r) is only accurate to 1/2 L.
+	average_L = (float(unit_cell[0]) + unit_cell[1] + unit_cell[2])/3
+	max_bin = int(round((average_L/2) / bin_size)) #Convert to integer bin
+	for distance_bin in xrange(0, max_bin):
 		#The format syntax is that we have _____._____ (5 spots before the . and 5 spots
 		#after). This will cover like 99.99% of all numbers we encounter.
-		print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, gr)
-		#pass
+		try:
+			print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, g[distance_bin])
+		except KeyError:
+			#g doesn't have this distance_bin entry. No worries, since we know it is zero:
+			print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, 0.0)
 	
-	#Alternative method for printing it out:
-
 
 
 def calc_interatomic_distance(in_coord_a, in_coord_b):
