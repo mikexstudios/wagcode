@@ -11,6 +11,10 @@
 #this filename replacing the .rdfin with .xyz
 structure_file = os.path.splitext(control_file)[0]+'.xyz'
 
+#Output tab separated value file (current set to this filename replacing
+#the .rdfin with .xyz):
+output_file = os.path.splitext(control_file)[0]+'.tsv'
+
 #Connection table (default is fort.7 in ReaxFF output):
 connection_table_file = 'fort.7'
 
