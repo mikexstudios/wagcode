@@ -36,7 +36,9 @@ class Connection_Table:
 				#We are probably on the last line where the values are floats
 				continue #Skip to the next for loop
 			
-			#Put the connection part into a sub array so that it's easier to access:
+			#Put the connection part into a sub array so that it's easier to access. The
+			#format is:
+			# atom_number(ffield) [conn1, conn2, ...] molecule_number
 			temp_fields = [fields[1]] #Put in a list. This is the atom "number" (ffield) part.
 			temp_fields.append(fields[2:-1]) #This is the connections part
 			temp_fields.append(fields[-1]) #This is the molecule number part

@@ -25,7 +25,7 @@ exclude_to_atom_if_connected_to = ''
 
 #Unit cell dimensions. (x, y, z) in angstroms. Set to False if no periodic
 #boundary conditions are used.
-unit_cell = (19.45, 17.76, 50)
+unit_cell = (19.45, 17.75, 14.31740)
 
 #Bin size defines the range of r distances that will be grouped into 
 #one histogram bin. The larger this number, the magnitude of each 
