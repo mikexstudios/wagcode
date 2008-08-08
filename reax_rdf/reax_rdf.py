@@ -19,7 +19,11 @@ from XYZ import XYZ #XYZ class
 from reax_connection_table import Connection_Table
 
 #Arguments
-control_file= sys.argv[1] #Settings for RDF
+try:
+	control_file= sys.argv[1] #Settings for RDF
+except IndexError:
+	print 'Usage: reax_rdf [controlfile]'
+	sys.exit(0)
 
 #Source the control file:
 try:
@@ -142,6 +146,13 @@ def main():
 	#	#after). This will cover like 99.99% of all numbers we encounter.
 	#	print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, gr)
 	#	#pass
+
+	#Output to file:
+	try:
+		output_f = file(output_file, 'w')
+	except (NameError, IOError):
+		print 'ERROR: Could not write output to '+output_file
+		sys.exit(1)
 	
 	#Alternative method for printing it out. We print only for r <= 1/2 L, where L is
 	#the average length of all the sides of the box. According to Deserno's paper on
@@ -149,14 +160,53 @@ def main():
 	#no longer increases like how we defined it above. So g(r) is only accurate to 1/2 L.
 	average_L = (float(unit_cell[0]) + unit_cell[1] + unit_cell[2])/3
 	max_bin = int(round((average_L/2) / bin_size)) #Convert to integer bin
+	#print "r \t g(r)"
+	output_f.write("r \t g(r)\n")
 	for distance_bin in xrange(0, max_bin):
 		#The format syntax is that we have _____._____ (5 spots before the . and 5 spots
 		#after). This will cover like 99.99% of all numbers we encounter.
 		try:
-			print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, g[distance_bin])
+			#print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, g[distance_bin])
+			output_f.write("%10.5f \t %10.5f\n" % (float(distance_bin) * bin_size, g[distance_bin]))
 		except KeyError:
 			#g doesn't have this distance_bin entry. No worries, since we know it is zero:
-			print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, 0.0)
+			#print "%10.5f \t %10.5f" % (float(distance_bin) * bin_size, 0.0)
+			output_f.write("%10.5f \t %10.5f\n" % (float(distance_bin) * bin_size, 0.0))
+
+	output_f.close()
+	print 'RDF as tab separated values written to: '+output_file
+
+	#Add in GNUPlot input file generation.
+	gnuplot_template = '''
+reset
+set title "Radial Distribution Function"
+set xlabel "r (angstrom)"
+set ylabel "g(r)"
+set nokey
+plot "[rdf_tsv_file]" u 1:2 with linespoints, \
+     "[rdf_tsv_file]" u 1:2 smooth bezier
+set term png
+set output "[output_image_file]"
+replot
+'''
+	try:
+		gnuplot_template = gnuplot_template.replace('[rdf_tsv_file]', gnuplot_file)
+		output_image_file = os.path.splitext(gnuplot_file)[0]+'.png'
+		gnuplot_template = gnuplot_template.replace('[output_image_file]', output_image_file)
+		#Write to file:
+		gnuplot_f = open(gnuplot_file, 'w')
+		gnuplot_f.write(gnuplot_template)
+		gnuplot_f.close()
+		print 'GNUPlot file written to: '+gnuplot_file
+
+		#Now generate the graphs
+		os.system('gnuplot '+gnuplot_file)
+		print 'GNUPlot graph generated!'
+	except IOError:
+		print 'ERROR: Could not write gnuplot file to: '+gnuplot_file
+	except NameError:
+		#Do nothing
+		pass
 	
 
 
