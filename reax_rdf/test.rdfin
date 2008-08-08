@@ -15,6 +15,10 @@ structure_file = os.path.splitext(control_file)[0]+'.xyz'
 #the .rdfin with .xyz):
 output_file = os.path.splitext(control_file)[0]+'.tsv'
 
+#If set, GNUPlot input file generation (use gnuplot [file].gplot to 
+#create the graphs):
+gnuplot_file = os.path.splitext(control_file)[0]+'.gplot'
+
 #Connection table (default is fort.7 in ReaxFF output):
 connection_table_file = 'fort.7'
 
