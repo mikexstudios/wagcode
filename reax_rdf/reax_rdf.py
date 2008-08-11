@@ -12,7 +12,7 @@ __copyright__ = 'General Public License (GPL)'
 import sys #For arguments and exit (in older python versions)
 import os #For file exist check and splitext and path stuff
 #import shutil
-#import time #For sleep
+import time #For sleep
 import math
 #import re #For regex
 from XYZ import XYZ #XYZ class
@@ -65,9 +65,11 @@ def main():
 	#Read in connection table (ReaxFF fort.7 style, see ReaxFF manual for more info)
 	connection_table = Connection_Table()
 	connection_table.load(connection_table_file)
-
+	
 	#Loop through each pair of atoms.
 	distance_histogram = {} #Dictionary instead of array so we can add entries at any element.
+	#TODO: I should add a try to this outer loop too to catch if from_atom
+	#      doesn't exist in the dictionary
 	for from_atom_row in simulation_atoms_dict[from_atom]:
 		#Calculate interatomic distances. Use the minimum image convention here to
 		#take care of any periodic conditions. We start by checking through all the
@@ -76,8 +78,8 @@ def main():
 			for to_atom_row in simulation_atoms_dict[to_atom]:
 				#Make sure this to_atom isn't part of the same molecule. We figure
 				#this out by using the molecule column of the connection table:
-				if connection_table.rows[from_atom_row[0]][2] == \
-				   connection_table.rows[to_atom_row[0]][2]:
+				if connection_table.rows[from_atom_row[0]][-1] == \
+				   connection_table.rows[to_atom_row[0]][-1]:
 					#We have the same molecule. Don't do anything for this to_atom.
 					continue
 				#Otherwise, calculate the interatomic distance:
@@ -126,16 +128,30 @@ def main():
 	#reverse what we do by multiplying by the bin_size (aka delta_r).
 	#Also, rho (the number density) is defined by wikipedia and MatDL wiki as:
 	# rho = N/V ; (num of particles)/(volume of system)
+	#where N is the number of particles we are considering.
 	#But Adri's RDF script doesn't calculate rho this way. He does some sort of ratio
 	#of the two atom populations...
-	total_number_atoms = len(simulation_atoms.rows)
+	#total_number_atoms = len(simulation_atoms.rows)
+	total_number_molecules = connection_table.rows[-1][-1]
 	total_volume = float(unit_cell[0]) * unit_cell[1] * unit_cell[2]
-	rho = total_number_atoms/total_volume
+	rho = total_number_molecules/total_volume
 	g = {} #This is our pair correlation function results. However, have to store as bins, not angstroms
 	for distance_bin, n_his in distance_histogram.iteritems():
-		n = float(n_his)/total_number_atoms
+		#n = float(n_his)#/total_number_atoms
+		n = float(n_his)/total_number_molecules
 		r = float(distance_bin) * bin_size #convert from bin index to length (angstroms)
 		n_id = ((4 * math.pi * rho)/3) * ( (r + bin_size)**3 - r**3 )
+		#Additional correction to n_id. First, we multiply by 2 since in n_his,
+		#we counted everything by pairs. Therefore, we want to do the same here.
+		#Next, we also multiply by the combinations of pairs between two sets
+		#of molecules (ie. Measuring O to H in H2O and H2O has 2 combinations
+		#since there are two sets of O to H pairs.).
+		#TODO: Automatically calculate combination factor.
+		try:
+			n_id *= 2 * combination_factor
+		except NameError:
+			#Combination factor wasn't defined. Default to 1.
+			n_id *= 2 * 1
 		#print n, n_id
 		g[distance_bin] = n/n_id
 	
@@ -190,7 +206,7 @@ set output "[output_image_file]"
 replot
 '''
 	try:
-		gnuplot_template = gnuplot_template.replace('[rdf_tsv_file]', gnuplot_file)
+		gnuplot_template = gnuplot_template.replace('[rdf_tsv_file]', output_file)
 		output_image_file = os.path.splitext(gnuplot_file)[0]+'.png'
 		gnuplot_template = gnuplot_template.replace('[output_image_file]', output_image_file)
 		#Write to file:
@@ -202,6 +218,8 @@ replot
 		#Now generate the graphs
 		os.system('gnuplot '+gnuplot_file)
 		print 'GNUPlot graph generated!'
+		time.sleep(2)
+		os.system('gqview')
 	except IOError:
 		print 'ERROR: Could not write gnuplot file to: '+gnuplot_file
 	except NameError:
