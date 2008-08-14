@@ -81,7 +81,8 @@ def main():
 				if connection_table.rows[from_atom_row[0]][-1] == \
 				   connection_table.rows[to_atom_row[0]][-1]:
 					#We have the same molecule. Don't do anything for this to_atom.
-					continue
+					#continue
+					pass
 				#Otherwise, calculate the interatomic distance:
 				from_atom_coord = (from_atom_row[1], from_atom_row[2], from_atom_row[3])
 				to_atom_coord = (to_atom_row[1], to_atom_row[2], to_atom_row[3])
@@ -137,8 +138,8 @@ def main():
 	rho = total_number_molecules/total_volume
 	g = {} #This is our pair correlation function results. However, have to store as bins, not angstroms
 	for distance_bin, n_his in distance_histogram.iteritems():
-		#n = float(n_his)#/total_number_atoms
-		n = float(n_his)/total_number_molecules
+		n = float(n_his)#/total_number_atoms
+		#n = float(n_his)/total_number_molecules
 		r = float(distance_bin) * bin_size #convert from bin index to length (angstroms)
 		n_id = ((4 * math.pi * rho)/3) * ( (r + bin_size)**3 - r**3 )
 		#Additional correction to n_id. First, we multiply by 2 since in n_his,
@@ -153,7 +154,7 @@ def main():
 			#Combination factor wasn't defined. Default to 1.
 			n_id *= 2 * 1
 		#print n, n_id
-		g[distance_bin] = n/n_id
+		g[distance_bin] = n#/n_id
 	
 	#Now print it out with angstroms!
 	#print "r \t g(r)"
