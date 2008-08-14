@@ -133,28 +133,38 @@ def main():
 	#But Adri's RDF script doesn't calculate rho this way. He does some sort of ratio
 	#of the two atom populations...
 	#total_number_atoms = len(simulation_atoms.rows)
+	number_from_atoms = len(simulation_atoms_dict[from_atom])
+	number_to_atoms = len(simulation_atoms_dict[to_atom])
+	if from_atom == to_atom:
+		total_number_analyzed_atoms = number_from_atoms
+		#No combination correction factor:
+		combination_correction_factor = 1
+	else:
+		total_number_analyzed_atoms = number_from_atoms + number_to_atoms
+		#Calculate combination correction factor. This factor allows the ideal
+		#gas approx to match the number of combinations that the n_his makes.
+		#For more information, see p77 of Vol 2 of my notebook.
+		heterogeneous_combinations = number_from_atoms * number_to_atoms
+		homogeneous_combinations = \
+		 (total_number_analyzed_atoms * (total_number_analyzed_atoms-1)) / 2
+		combination_correction_factor = \
+		 heterogeneous_combinations/float(homogeneous_combinations)
 	total_number_molecules = connection_table.rows[-1][-1]
 	total_volume = float(unit_cell[0]) * unit_cell[1] * unit_cell[2]
-	rho = total_number_molecules/total_volume
+	rho = total_number_analyzed_atoms/total_volume
 	g = {} #This is our pair correlation function results. However, have to store as bins, not angstroms
+	
 	for distance_bin, n_his in distance_histogram.iteritems():
 		n = float(n_his)#/total_number_atoms
 		#n = float(n_his)/total_number_molecules
 		r = float(distance_bin) * bin_size #convert from bin index to length (angstroms)
 		n_id = ((4 * math.pi * rho)/3) * ( (r + bin_size)**3 - r**3 )
-		#Additional correction to n_id. First, we multiply by 2 since in n_his,
-		#we counted everything by pairs. Therefore, we want to do the same here.
-		#Next, we also multiply by the combinations of pairs between two sets
-		#of molecules (ie. Measuring O to H in H2O and H2O has 2 combinations
-		#since there are two sets of O to H pairs.).
-		#TODO: Automatically calculate combination factor.
-		try:
-			n_id *= 2 * combination_factor
-		except NameError:
-			#Combination factor wasn't defined. Default to 1.
-			n_id *= 2 * 1
+		#Additional correction to n_id.
+		n_id *= number_from_atoms + number_to_atoms
+		n_id *= combination_correction_factor
+		
 		#print n, n_id
-		g[distance_bin] = n#/n_id
+		g[distance_bin] = n/n_id
 	
 	#Now print it out with angstroms!
 	#print "r \t g(r)"

@@ -31,17 +31,6 @@ to_atom = 'H'
 #      automatically excluded
 exclude_to_atom_if_connected_to = ''
 
-#Combination factor. This is the number of combinations of pairs that two
-#molecules can make against each other. For instance, in a water box, meas-
-#uring RDF from O to H, the combination factor is 2 since there are two
-#H's that the O can pair to on the other molecule. For O to O, combination
-#factor is 1. For H to H, combination factor is 4. The combination factor
-#gets much more complicated to calculate once there are mixed molecules
-#in the system. For that situation, I advocate doing a weighted average
-#of the calculated combinations.
-#Default value = 1
-combination_factor = 1
-
 #Unit cell dimensions. (x, y, z) in angstroms. Set to False if no periodic
 #boundary conditions are used.
 unit_cell = (19.45, 17.75, 14.31740)
