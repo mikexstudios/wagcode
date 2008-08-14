@@ -16,7 +16,7 @@ import time #For sleep
 import math
 #import re #For regex
 from XYZ import XYZ #XYZ class
-#from reax_connection_table import Connection_Table
+from reax_connection_table import Connection_Table
 
 #Arguments
 try:
@@ -63,8 +63,8 @@ def main():
 			simulation_atoms_dict[each_row[0]] = [temp_list] #New list
 	
 	#Read in connection table (ReaxFF fort.7 style, see ReaxFF manual for more info)
-	#connection_table = Connection_Table()
-	#connection_table.load(connection_table_file)
+	connection_table = Connection_Table()
+	connection_table.load(connection_table_file)
 	
 	#Loop through each pair of atoms.
 	distance_histogram = {} #Dictionary instead of array so we can add entries at any element.
@@ -78,11 +78,11 @@ def main():
 			for to_atom_row in simulation_atoms_dict[to_atom]:
 				#Make sure this to_atom isn't part of the same molecule. We figure
 				#this out by using the molecule column of the connection table:
-				#if connection_table.rows[from_atom_row[0]][-1] == \
-				#   connection_table.rows[to_atom_row[0]][-1]:
-				#	#We have the same molecule. Don't do anything for this to_atom.
-				#	#continue
-				#	pass
+				if connection_table.rows[from_atom_row[0]][-1] == \
+				   connection_table.rows[to_atom_row[0]][-1]:
+					#We have the same molecule. Don't do anything for this to_atom.
+					continue
+					#pass
 				
 				#Otherwise, calculate the interatomic distance:
 				from_atom_coord = (from_atom_row[1], from_atom_row[2], from_atom_row[3])
@@ -150,7 +150,7 @@ def main():
 		 (total_number_analyzed_atoms * (total_number_analyzed_atoms-1)) / 2
 		combination_correction_factor = \
 		 heterogeneous_combinations/float(homogeneous_combinations)
-	#total_number_molecules = connection_table.rows[-1][-1]
+	total_number_molecules = connection_table.rows[-1][-1]
 	total_volume = float(unit_cell[0]) * unit_cell[1] * unit_cell[2]
 	rho = total_number_analyzed_atoms/total_volume
 	g = {} #This is our pair correlation function results. However, have to store as bins, not angstroms

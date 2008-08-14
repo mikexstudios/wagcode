@@ -26,9 +26,34 @@ class Connection_Table:
 		self.rows.append(None) 
 		#Discard the first line
 		f.next()
+
+		#Try to detect where the last connection column is. We can guess it
+		#by finding the spot where we see: 1 [a float].
+		sample_line = f.next()
+		sample_line = sample_line.split()
+		for i, col in enumerate(sample_line):
+			#We want to skip the atom number field. Hence the i > 2:
+			try:
+				if i > 2 and int(col) == 1:
+					#Check for float in next col:
+					try:
+						int(sample_line[i+1])
+					except ValueError: #This is because int can't convert a float
+						float(sample_line[i+1]) #Check to see if we can float this
+						last_connection_column = i + 1 #Correct the fact we start at 0
+						break
+					except IndexError:
+						print 'ERROR: Could not determine last connection column.'
+						sys.exit(1)
+			except ValueError: #We couldn't convert a float into an int
+				pass #Ignore
+		
+		#Reset file pointer to the beginning of the data lines:
+		f.seek(0)
+		f.next() #Discard first line
 		for line in f:
 			fields = line.split()
-			fields = fields[:8] #Want only the first 8 fields
+			fields = fields[:last_connection_column] #Want only the first i fields
 			fields = map(str.strip, fields) #trim whitespace
 			try:
 				fields = map(int, fields) #all the fields are integers

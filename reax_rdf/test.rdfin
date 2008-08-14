@@ -20,7 +20,7 @@ output_file = os.path.splitext(control_file)[0]+'.tsv'
 gnuplot_file = os.path.splitext(control_file)[0]+'.gplot'
 
 #Connection table (default is fort.7 in ReaxFF output):
-#connection_table_file = 'fort.7'
+connection_table_file = 'fort.7'
 
 #The atom which we are measuring from:
 from_atom = 'O'
