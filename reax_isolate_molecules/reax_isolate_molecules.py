@@ -58,11 +58,11 @@ def main():
 	#tests()
 	
 	#Read in XYZ file. Store all the coordinates.
-	global simulation_atoms
+	global simulation_atoms, simulation_atoms_dict
 	simulation_atoms = XYZ()
 	simulation_atoms.load(structure_file) #simulation_atoms.rows contains the data
 	simulation_atoms_dict = simulation_atoms.return_sorted_by_atoms_dict()
-	#NOTE: Now we have two tables, simulation_atoms and simuation_atoms_dict
+	#NOTE: Now we have two tables, simulation_atoms and simulation_atoms_dict
 
 	#Read in connection table (ReaxFF fort.7 style, see ReaxFF manual for more info)
 	global connection_table #So that other functions can access this
@@ -74,37 +74,53 @@ def main():
 		an_atom = target_molecule[0] #Select the first atom to work with.
 		#Loop through all the atoms matching the an_atom type:
 		for simulation_atom in simulation_atoms_dict[an_atom]:
+			#Somewhat of a hack: Do a quick check here to see if this atom has been
+			#nullified in the XYZ object. If so, we can just skip it since this atom
+			#has been "deleted".
+			#NOTE: simulation_atom[0] - atom number
+			#The +1 is correction to XYZ's list since it starts at 0 and atom numbers
+			#start at 1:
+			if simulation_atoms.rows[simulation_atom[0]+1] == None:
+				continue #skip this atom since it has been deleted
+
+			#For the current atom, get the molecule that corresponds to it:
 			molecule_parts = get_molecule_for_atom(simulation_atom[0])
-			print molecule_parts
-			sys.exit(0)
-			#Check this molecule against our isolation specification
+			#Check this molecule against our isolation specification see if match exists:
 			same_molecules_q = are_molecules_the_same( \
 				list(target_molecule),
 				molecule_parts_to_list(molecule_parts),
 				isolate_criteria
 				)
+			#Get the molecule numbers so that we can feed it into the nullify atoms func.
+			molecule_atom_numbers = molecule_parts.keys()
+			#Now keep/remove depending on criteria:
 			if isolate_method == 'include':
 				if same_molecules_q != True:
 					#The molecules are not the same so we need to delete it	
-					pass
+					nullify_atoms_in_XYZ(molecule_atom_numbers, simulation_atoms.rows)
 			elif isolate_method == 'exclude':
 				if same_molecules_q == True:
 					#This molecule is in the excluded list so we need to delete it
-					pass
+					nullify_atoms_in_XYZ(molecule_atom_numbers, simulation_atoms.rows)
 			else:
 				print 'ERROR: isolate_method option invalid!'
 				sys.exit(0)
+	#Cool, we now ran through the whole XYZ file. Let's save the changed version:
 
-def nullify_atoms_in_XYZ(atom_numbers, xyz_representation):
+def nullify_atoms_in_XYZ(atom_numbers):
 	'''
 	By nullify, we just make that array entry a None object. We'll check for it later
 	and rebuild the XYZ file without the None's later. The reason why we don't just delete
 	is to keep the index to atom_number mapping consistent.
 	'''
+	global simulation_atoms, simulation_atoms_dict
 
 	for atom_number in atom_numbers:
+		#+1 is correction for XYZ list since it starts at zero
+		atom_type = simulation_atoms.rows[atom_number+1][0]
+		simulation_atoms_dict[atom_type][
+		simulation_atoms.rows[atom_number+1] = None
 		
-	pass
 
 def are_molecules_the_same(molecule_a, molecule_b, extra_criteria='exact'):
 	molecule_a = molecule_a[:] #Copy so that we don't destroy the original list (it's referenced!)
@@ -161,7 +177,7 @@ def get_molecule_for_atom(atom_number, molecule_dict=None):
 		#Determine the atom type of each of the connections
 		if connection_num != 0:
 			#Check to see if entry already exists in molecule_dict. If so, then we
-			#do nothing.
+			#do nothing. Can also use .has_key() method.
 			try:
 				molecule_dict[connection_num]
 				pass #Do nothing
