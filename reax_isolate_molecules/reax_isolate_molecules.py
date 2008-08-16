@@ -27,7 +27,7 @@ isolate_method = 'include'
 #containing exactly the specified atoms in target_molecules will be acted upon. 'including'
 #means that molecules containing at least the specified atoms in target_molecules will be
 #acted upon.
-isolate_criteria = 'including' #Either: 'exact' or 'including'
+isolate_criteria = 'exact' #Either: 'exact' or 'including'
 #Target molecules are specified as a list of tuples.
 target_molecules = [
 		('H', 'O', 'H')
@@ -35,11 +35,13 @@ target_molecules = [
 
 structure_file = 'test.xyz'
 connection_table_file = 'fort.7'
+output_xyz_file = 'test_out.xyz'
 
 def tests():
 	a = ['H', 'O', 'H']
 	b = ['H', 'O', 'O', 'H']
 	c = ['C', 'H', 'H', 'H']
+	d = ['Cl']
 	
 	assert are_molecules_the_same(a, a[:]) == True
 	assert are_molecules_the_same(a, a[:], 'including') == True
@@ -50,12 +52,19 @@ def tests():
 	assert are_molecules_the_same(b, c) == False
 	assert are_molecules_the_same(b, c, 'including') == False
 	assert are_molecules_the_same(c, b, 'including') == False
+	assert are_molecules_the_same(a, d) == False
+	assert are_molecules_the_same(a, d, 'including') == False
+	
+	Cl_ion_test = get_molecule_for_atom(548)
+	print Cl_ion_test
+	print molecule_parts_to_list(Cl_ion_test)
+	print Cl_ion_test
+	print are_molecules_the_same(a, molecule_parts_to_list(Cl_ion_test))
+
 	print 'All tests completed successfully!'
 	sys.exit(0)
 
 def main():
-	#Testing
-	#tests()
 	
 	#Read in XYZ file. Store all the coordinates.
 	global simulation_atoms, simulation_atoms_dict
@@ -69,43 +78,65 @@ def main():
 	connection_table = Connection_Table()
 	connection_table.load(connection_table_file)
 
+	#Testing
+	#tests()
+
 	#Go through each of the target molecules and do isolation stuff:
 	for target_molecule in target_molecules:
-		an_atom = target_molecule[0] #Select the first atom to work with.
+		#Select an atom to work with. We just select the first one. Used for the 'exclude'
+		#case so that we don't have to check every single atom in simulation_atoms:
+		an_atom = target_molecule[0] 
 		#Loop through all the atoms matching the an_atom type:
-		for simulation_atom in simulation_atoms_dict[an_atom]:
+		for atom_number, each_atom in enumerate(simulation_atoms.rows):
+			#Correction to the atom_number since XYZ list starts at 0 but atom numbers
+			#start at 1:
+			atom_number += 1
+
 			#Somewhat of a hack: Do a quick check here to see if this atom has been
 			#nullified in the XYZ object. If so, we can just skip it since this atom
 			#has been "deleted".
-			#NOTE: simulation_atom[0] - atom number
-			#The +1 is correction to XYZ's list since it starts at 0 and atom numbers
-			#start at 1:
-			if simulation_atoms.rows[simulation_atom[0]+1] == None:
+			if each_atom == None:
 				continue #skip this atom since it has been deleted
-
+			
+			#If the isolate_method is 'include' then we have to check all atoms because
+			#there are cases of single atoms and/or atoms not connected to the target
+			#molecule atoms that we defined which we won't catch unless we check every 
+			#atom. If the isolate method is 'exclude' then we just have to check atoms that
+			#are connected to an atom in the defined target molecule.
+			if isolate_method == 'exclude' and each_atom[0] != an_atom:
+				#Skip this atom for now. If it's part of the target molecule, we'll
+				#automatically come back to it later.
+				continue
+			
 			#For the current atom, get the molecule that corresponds to it:
-			molecule_parts = get_molecule_for_atom(simulation_atom[0])
+			molecule_parts = get_molecule_for_atom(atom_number)
+			
 			#Check this molecule against our isolation specification see if match exists:
 			same_molecules_q = are_molecules_the_same( \
 				list(target_molecule),
 				molecule_parts_to_list(molecule_parts),
 				isolate_criteria
 				)
+
 			#Get the molecule numbers so that we can feed it into the nullify atoms func.
 			molecule_atom_numbers = molecule_parts.keys()
 			#Now keep/remove depending on criteria:
 			if isolate_method == 'include':
 				if same_molecules_q != True:
+					#print molecule_parts
 					#The molecules are not the same so we need to delete it	
-					nullify_atoms_in_XYZ(molecule_atom_numbers, simulation_atoms.rows)
+					nullify_atoms_in_XYZ(molecule_atom_numbers)
 			elif isolate_method == 'exclude':
 				if same_molecules_q == True:
 					#This molecule is in the excluded list so we need to delete it
-					nullify_atoms_in_XYZ(molecule_atom_numbers, simulation_atoms.rows)
+					nullify_atoms_in_XYZ(molecule_atom_numbers)
 			else:
 				print 'ERROR: isolate_method option invalid!'
 				sys.exit(0)
+
 	#Cool, we now ran through the whole XYZ file. Let's save the changed version:
+	simulation_atoms.export(output_xyz_file)
+	print 'Processed XYZ file exported: '+output_xyz_file
 
 def nullify_atoms_in_XYZ(atom_numbers):
 	'''
@@ -113,13 +144,11 @@ def nullify_atoms_in_XYZ(atom_numbers):
 	and rebuild the XYZ file without the None's later. The reason why we don't just delete
 	is to keep the index to atom_number mapping consistent.
 	'''
-	global simulation_atoms, simulation_atoms_dict
+	global simulation_atoms
 
 	for atom_number in atom_numbers:
-		#+1 is correction for XYZ list since it starts at zero
-		atom_type = simulation_atoms.rows[atom_number+1][0]
-		simulation_atoms_dict[atom_type][
-		simulation_atoms.rows[atom_number+1] = None
+		#-1 is correction for XYZ list since it starts at zero
+		simulation_atoms.rows[atom_number-1] = None
 		
 
 def are_molecules_the_same(molecule_a, molecule_b, extra_criteria='exact'):
