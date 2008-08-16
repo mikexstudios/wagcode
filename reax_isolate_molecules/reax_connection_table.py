@@ -53,10 +53,13 @@ class Connection_Table:
 		f.next() #Discard first line
 		for line in f:
 			fields = line.split()
-			fields = fields[:last_connection_column] #Want only the first i fields
 			fields = map(str.strip, fields) #trim whitespace
+			connect_fields = fields[:last_connection_column] #Want only the first i fields
+			bondorder_fields = fields[last_connection_column:-3] #Don't want the last 3 cols
+			#Now convert the types:
 			try:
-				fields = map(int, fields) #all the fields are integers
+				connect_fields = map(int, connect_fields) #all the fields are integers
+				bondorder_fields = map(float, bondorder_fields)
 			except ValueError:
 				#We are probably on the last line where the values are floats
 				continue #Skip to the next for loop
@@ -64,9 +67,12 @@ class Connection_Table:
 			#Put the connection part into a sub array so that it's easier to access. The
 			#format is:
 			# atom_number(ffield) [conn1, conn2, ...] molecule_number
-			temp_fields = [fields[1]] #Put in a list. This is the atom "number" (ffield) part.
-			temp_fields.append(fields[2:-1]) #This is the connections part
-			temp_fields.append(fields[-1]) #This is the molecule number part
+			temp_fields = [connect_fields[1]] #Put in a list. This is the atom "number" (ffield) part.
+			#At this step, we want to combine the connect fields with their corresponding
+			#bond order. In other words, we want something like: [(4, '0.4123'), ...]. The
+			#zip function does that for us.
+			temp_fields.append(zip(connect_fields[2:-1], bondorder_fields)) #This is the connections part
+			temp_fields.append(connect_fields[-1]) #This is the molecule number part
 
 			self.rows.append(temp_fields) #maybe we want to append fields as tuple
 		f.close()

@@ -31,7 +31,11 @@ isolate_criteria = 'exact' #Either: 'exact' or 'including'
 #Target molecules are specified as a list of tuples.
 target_molecules = [
 		('H', 'O', 'H')
-	]
+		]
+#Bond cutoff. This is the lowest value in which we will consider the bond being a "real"
+#bond. Any BO below this will be disregarded. The cutoff is useful in excluding hydrogen
+#bonds from being processed when determining what the "molecule" is for a given atom.
+bondorder_cutoff = 0.5
 
 structure_file = 'test.xyz'
 connection_table_file = 'fort.7'
@@ -188,6 +192,7 @@ def molecule_parts_to_list(in_parts):
 
 def get_molecule_for_atom(atom_number, molecule_dict=None):
 	global simulation_atoms, connection_table
+	global bondorder_cutoff
 
 	#We have to set molecule_label to default as None instead of [] because in python,
 	#default parameter values can be modified inside the function and remain modified.
@@ -202,21 +207,30 @@ def get_molecule_for_atom(atom_number, molecule_dict=None):
 	#the molecule.
 	atom_connections = connection_table.rows[atom_number][1] #selecting only connections
 	#molecule_label = []
-	for connection_num in atom_connections:
-		#Determine the atom type of each of the connections
-		if connection_num != 0:
+	for connection in atom_connections:
+		#Determine the atom type of each of the connections. Note that connection is a tuple.
+		#The first element is the atom number connected to. The second element is the bond
+		#order.
+		connection_num, connection_bondorder = connection
+		#if connection_bondorder > 0.2 and connection_bondorder < 0.6:
+		#	print connection
+		
+		#0 means not connected to anything. We also want bonds that are greater than
+		#our defined cutoff (this is to exclude atoms from being in a molecule just because
+		#they are hydrogen bonding to it):
+		if connection_num != 0 and connection_bondorder > bondorder_cutoff:
 			#Check to see if entry already exists in molecule_dict. If so, then we
 			#do nothing. Can also use .has_key() method.
 			try:
 				molecule_dict[connection_num]
 				pass #Do nothing
 			except KeyError:
+				#We can not add this connection to our molecule_dict. But first, let's check
+				#the bond order to make sure that it is a significant bond.
 				#Minus 1 on connection_num to correct for XYZ array
 				molecule_dict[connection_num] = simulation_atoms.rows[connection_num-1]
 				#molecule_label.append(simulation_atoms.rows[connection_num][0])
-				#Recursively find if this connection atom is connected to anything else. Oh
-				#crap, I didn't realize that all of these connections are circular... This is
-				#harder than I had thought...
+				#Recursively find if this connection atom is connected to anything else.
 				molecule_dict = get_molecule_for_atom(connection_num, molecule_dict)
 	
 	return molecule_dict
