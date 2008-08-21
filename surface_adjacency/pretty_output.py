@@ -68,6 +68,8 @@ def main():
             ''', (each_num_mol,))
         row = db.fetchone()
         
+        print row['config']
+
         #Uncomment if want twisted EtOH:
         twisted_rep = create_twists.create_twists( \
             convert_bin_string_to_list(row['config']) \

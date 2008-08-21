@@ -14,11 +14,11 @@ import sqlite3
 
 #Arguments
 max_horizontal_spots = 6 #This allows us to convert the long string into an array of strings.
-horizontal_adj_energy_cost = 10 #kcal/mol
-vertical_adj_energy_cost = 1 #kcal/mol
+horizontal_adj_energy_cost = 20 #kcal/mol
+vertical_adj_energy_cost = 10 #kcal/mol
 hole_adjacency_cost = 1 #kcal/mol
 horizontal_hole_cost = 3 #See p84 of Vol 2 of my notebook for more info.
-horizontal_hole_near_cost = 1
+horizontal_hole_near_cost = 2
 db_file = 'surface_adjacency.db'
 
 def binary_string_permutation(target_depth, previous_level_permutation=''):

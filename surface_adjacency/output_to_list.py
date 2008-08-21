@@ -69,17 +69,17 @@ def main():
 		row = db.fetchone()
 		
 		#Uncomment if want twisted EtOH:
-		#twisted_rep = create_twists.create_twists( \
-		#	convert_bin_string_to_list(row['config']) \
-		#	)
-		#twisted_rep = transpose_list(twisted_rep)
-		##Now go in and do string replaces for -1 entries:
-		#twisted_rep = str(twisted_rep)
-		#twisted_rep = twisted_rep.replace('-1', "[1,5,'z',180]")
-		#f.write(twisted_rep+", \n")
+		twisted_rep = create_twists.create_twists( \
+			convert_bin_string_to_list(row['config']) \
+			)
+		twisted_rep = transpose_list(twisted_rep)
+		#Now go in and do string replaces for -1 entries:
+		twisted_rep = str(twisted_rep)
+		twisted_rep = twisted_rep.replace('-1', "[1,5,'z',180]")
+		f.write(twisted_rep+", \n")
 		
 		#Uncomment if want non-twisted EtOH:
-		f.write(str(transpose_list(convert_bin_string_to_list(row['config'])))+", \n")
+        #f.write(str(transpose_list(convert_bin_string_to_list(row['config'])))+", \n")
 
 	f.write("]\n")
 	f.close()
