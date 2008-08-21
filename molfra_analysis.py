@@ -46,12 +46,16 @@ exclude_molecules = [] #Gets overridden by the command line option
 num_mol_regex = re.compile('^\s+(\d+)\s+(\d+)\s+x\s+([a-zA-Z0-9]+)\s+[0-9\.]\s*');
 
 #Parse command line options
-usage = 'usage: %prog -g -e "mol1, mol2, ..."'
+usage = 'usage: %prog -g -s -l -e "mol1, mol2, ..."'
 parser = OptionParser(usage=usage, version='%prog '+__version__)
 parser.add_option('-e', '--exclude', dest='excludemolecules', 
                    help='List of molecules to exclude from the molfra plot.')
 parser.add_option('-g', '--graphs', action='store_true', dest='generategraphs', 
                    help='Automatically generate gnuplot png graphs.')
+parser.add_option('-s', '--smooth', action='store_true', dest='smoothlines', 
+                   help='Instead of linespoints, uses line smoothing.')
+parser.add_option('-l', '--large', action='store_true', dest='largeoutput', 
+                   help='Large PNG graphic output 1024x768.')
 (options, args) = parser.parse_args()
 #print options
 #print args
@@ -112,7 +116,7 @@ for each_exclude in exclude_molecules:
 		print 'Excluded '+each_exclude
 	except KeyError:
 		print 'ERROR: Molecule '+each_exclude+' could not be found, so '+\
-		      'not excluded'
+			  'not excluded'
 
 print "All distinct molecules ("+str(len(mol_dict.keys()))+" total): \n"
 print string.join(mol_dict.keys(), "\t")
@@ -125,15 +129,27 @@ fgplot.write("set title \"Number of Molecules Analysis\"\n")
 fgplot.write("set xlabel \"Time (iteration)\"\n")
 fgplot.write("set ylabel \"Number of Molecules\"\n")
 fgplot.write("set key outside below\n")
-fgplot.write("set data style linespoints\n")
+if options.smoothlines:
+	pass #Use linesmoothing
+else:
+	fgplot.write("set data style linespoints\n")
+if options.largeoutput:
+	fgplot.write("set pointsize 2\n")
 fgplot.write('plot ')
 for i, each_molname in enumerate(mol_dict.keys()):
-    fgplot.write("'"+output_file+"' u 1:"+str(i+2)+" title \""+each_molname+"\"")
+	if options.smoothlines:
+		fgplot.write("'"+output_file+"' u 1:"+str(i+2)+" smooth bezier title \""+each_molname+"\"")
+	else:
+		fgplot.write("'"+output_file+"' u 1:"+str(i+2)+" title \""+each_molname+"\"")
     #Takes care of the last plot element (remove trailing ,)
-    if(i != len(mol_dict.keys())-1):
-        fgplot.write(", ") 
+	if(i != len(mol_dict.keys())-1):
+		fgplot.write(", ") 
 fgplot.write("\n")
-fgplot.write("set term png\n")
+if options.largeoutput:
+	fgplot.write("set size 1.6,1.6\n") #1024x768 resolution
+	fgplot.write("set term png\n")
+else:
+	fgplot.write("set term png\n")
 fgplot.write("set output \"molfra.png\"\n")
 fgplot.write("replot")
 fgplot.close()
@@ -148,9 +164,15 @@ fgplot.write("set xlabel \"Time (iteration)\"\n")
 fgplot.write("set ylabel \"Total Number of Molecules\"\n")
 #fgplot.write("set key outside below\n")
 fgplot.write("set data style linespoints\n")
+if options.largeoutput:
+	fgplot.write("set pointsize 2\n")
 fgplot.write("plot \""+num_mol_file+"\" u 1:2")
 fgplot.write("\n")
-fgplot.write("set term png\n")
+if options.largeoutput:
+	fgplot.write("set size 1.6,1.6\n") #1024x768 resolution
+	fgplot.write("set term png\n")
+else:
+	fgplot.write("set term png\n")
 fgplot.write("set output \"nummol.png\"\n")
 fgplot.write("replot")
 fgplot.close()
@@ -198,7 +220,7 @@ while True:
 	#		print 'Excluded '+each_exclude
 	#	except KeyError:
 	#		print 'ERROR: Molecule '+each_exclude+' could not be found, so '+\
-	#		      'not excluded'
+	#			  'not excluded'
 
     #Match number of molecules
 	matches = re.match('^\s+Total number of molecules:\s*(\d+)\s*', line);
@@ -218,7 +240,7 @@ while True:
 				#print 'Excluded '+each_exclude
 			except KeyError:
 				print 'ERROR: Molecule '+each_exclude+' could not be found, so '+\
-				      'not excluded'
+					  'not excluded'
 		
 		#We want to: 1. Write mol_dict to output file. 2. Clear mol_dict and iter.
 		mol_dict_values = map(str, mol_dict.values()) #Assume it returns values in correct order
