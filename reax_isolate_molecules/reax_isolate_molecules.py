@@ -22,12 +22,12 @@ from reax_connection_table import Connection_Table
 #The isolate method can be either 'include' or 'exclude'. 'include' means that ONLY
 #the target molecules will remain after isolation. 'exclude' means that NONE of the target
 #molecules will remain after isolation.
-isolate_method = 'include' 
+isolate_method = 'exclude' 
 #The isolate criteria can be either 'exact' or 'including'. 'exact' means that molecules
 #containing exactly the specified atoms in target_molecules will be acted upon. 'including'
 #means that molecules containing at least the specified atoms in target_molecules will be
 #acted upon.
-isolate_criteria = 'exact' #Either: 'exact' or 'including'
+isolate_criteria = 'including' #Either: 'exact' or 'including'
 #Target molecules are specified as a list of tuples.
 target_molecules = [
 		('H', 'O', 'H')
