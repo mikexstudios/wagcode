@@ -5,17 +5,16 @@ reax_connection_table.py
 A class to represent ReaxFF's fort.7 connection table. See the ReaxFF manual
 for more info.
 
+NOTE: The file pointer is not closed until the instance is deleted.
+
 $Id$
 '''
-__version__ = '0.1.0'
-__date__ = '05 August 2008'
 __author__ = 'Michael Huynh (mikeh@caltech.edu)'
 __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
 
 #import math
 import sys #for exit
-import os #for os.SEEK_CUR
 import re
 
 class Connection_Table:
@@ -25,6 +24,9 @@ class Connection_Table:
 
     def __init__(self):
         pass
+
+    def __del__(self):
+        self.f.close()
 
     def __iter__(self):
         '''We want this to be iterable.'''
