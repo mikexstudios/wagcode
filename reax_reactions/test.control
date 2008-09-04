@@ -1,0 +1,25 @@
+############################################################
+# Configuration file for ReaxFF Reactions Analysis
+# To use: reax_reactions [this_config_file]
+# (Need to run reax_reactions in the same directory as
+#  config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+############################################################
+
+#Filename of the ReaxFF output structure (in XYZ format). Currently set to this
+#filename replacing the .control with .xyz. The reason why we need this file is
+#because ReaxFF's connection table does not specify atom type.
+structure_file = os.path.splitext(control_file)[0]+'.xyz'
+
+#Connection table (default is fort.7 in ReaxFF output):
+connection_table_file = 'fort.7'
+
+#Output file (current set to this filename replacing the .control with .xyz):
+output_file = os.path.splitext(control_file)[0]+'.tsv'
+
+#Bond cutoff. This is the lowest value in which we will consider the bond being
+#a "real" bond. Any BO below this will be disregarded. The cutoff is useful in
+#excluding hydrogen bonds from being processed when determining what the
+#"molecule" is for a given atom.
+bondorder_cutoff = 0.5
