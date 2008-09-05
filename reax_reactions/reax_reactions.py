@@ -20,6 +20,7 @@ import os #For file exist check and splitext and path stuff
 #import re #For regex
 from XYZ import XYZ #XYZ class
 from reax_connection_table import Connection_Table
+from reax.molecule_helper import Molecule_Helper
 
 #Arguments
 try:
@@ -47,6 +48,10 @@ def main():
     connection_table = Connection_Table()
     connection_table.load(connection_table_file)
     print 'Connection table file loaded successfully: '+connection_table_file
+
+    #Get list of molcules for the current iteration. Each molecule will be
+    #defined as a tuple of (atom number, atom type).
+
 
 
 if __name__ == '__main__':

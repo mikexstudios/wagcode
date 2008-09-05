@@ -167,7 +167,6 @@ class Connection_Table:
         print 'ERROR: Could not determine last connection column.'
         sys.exit(1)
 
-
 def tests():
     connect_table = Connection_Table()
 
@@ -213,6 +212,8 @@ def tests():
 
     print 'All tests completed successfully!'
     sys.exit(0)
+
+
 
 def main():
     #tests()
