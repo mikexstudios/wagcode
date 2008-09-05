@@ -51,6 +51,11 @@ def main():
 
     #Get list of molcules for the current iteration. Each molecule will be
     #defined as a tuple of (atom number, atom type).
+    molecule_helper = Molecule_Helper()
+    molecule_helper.simulation_atoms_class = simulation_atoms
+    molecule_helper.connection_table_class = connection_table
+    molecule_helper.bondorder_cutoff = bondorder_cutoff
+
 
 
 
