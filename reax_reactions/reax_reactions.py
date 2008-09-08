@@ -50,12 +50,15 @@ def main():
     connection_table.next()
     print 'Connection table file loaded successfully: '+connection_table_file
 
+    #The molecule helper class provides methods for working with both the XYZ
+    #and connection table classes.
+    molecule_helper = Molecule_Helper()
+    molecule_helper.simulation_atoms_class = simulation_atoms
+    molecule_helper.connection_table_class = connection_table
+    molecule_helper.bondorder_cutoff = bondorder_cutoff
+    
     ##Get list of molecules for the current iteration. Each molecule will be
     ##defined as a tuple of (atom number, atom type).
-    #molecule_helper = Molecule_Helper()
-    #molecule_helper.simulation_atoms_class = simulation_atoms
-    #molecule_helper.connection_table_class = connection_table
-    #molecule_helper.bondorder_cutoff = bondorder_cutoff
 
     #molecules_list_current_iter = molecule_helper.get_all_molecules()
     #print molecule_helper.molecule_list_to_frequency_dict(molecules_list_current_iter)
@@ -71,10 +74,26 @@ def main():
     #changed connectivity.
     connection_table_current = connection_table.rows[:]
     connection_table_next = connection_table.next() #We don't need to make copy here.
-    
-    
+    changed_atoms_entries = get_atoms_that_have_connection_changes(connection_table_current,
+                        connection_table_next, bondorder_cutoff)
     #Then take these atoms that have changed, and get the molecule that
-    #corresponds to it.
+    #corresponds to it. First, let's transform the output we get into just a
+    #list of changed atoms. Our approach is to put all the atoms into a list.
+    #Then convert it into a set since that automatically eliminates all duplicate
+    #elements.
+    just_changed_atoms = []
+    for each_changed_atom_entry in changed_atoms_entries:
+        just_changed_atoms.append(each_changed_atom_entry[0])
+        just_changed_atoms.append(each_changed_atom_entry[1])
+    changed_atom_numbers = set(just_changed_atoms)
+
+    for each_changed_atom_number in changed_atom_numbers:
+        molecule_atom_list =  molecule_helper.get_molecule_for_atom(each_changed_atom_number)
+        print molecule_helper.atom_label_list_to_formula(
+                molecule_helper.get_atom_label_list_from_molecule(
+                    molecule_atom_list
+                ))
+            
 
 def get_atoms_that_have_connection_changes(connection_table_a, \
     connection_table_b, bondorder_cutoff):
@@ -90,7 +109,7 @@ def get_atoms_that_have_connection_changes(connection_table_a, \
     that changes to 0.55 does not count as a bond formation.
     
     Sample return:
-    [(3, 5, 0.23), (5, 3, 0.23), (183, 187, 0.81)]
+    [(3, 5, 0.23), (5, 4, 0.03), (183, 187, 0.81)]
     '''
     #Helper function:
     def remove_connection_duplicates(in_connection_changes):
@@ -236,5 +255,5 @@ def tests():
 
 
 if __name__ == '__main__':
-    tests()
+    #tests()
     main()
