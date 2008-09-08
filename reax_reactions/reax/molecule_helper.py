@@ -11,7 +11,7 @@ cutoff). So that we don't have functions that *must* take each of these as
 arguments, thus bloating up the arguments and making it less user friendly, we
 wrap a class around the functions and set these arguments as class variables.
 
-$Id:$
+$Id$
 '''
 __author__ = 'Michael Huynh (mikeh@caltech.edu)'
 __website__ = 'http://www.mikexstudios.com'
@@ -186,7 +186,7 @@ class Molecule_Helper:
 def tests():
     #Currently assume some relative path stuff. This is apt to change once we
     #make this into a module.
-    sys.path.append("..")
+    sys.path.insert(0, "..") #Make this the first thing since we want to override
     from XYZ import XYZ #XYZ class
     from reax_connection_table import Connection_Table
    
@@ -202,6 +202,7 @@ def tests():
     #Read in connection table (ReaxFF fort.7 style, see ReaxFF manual for more info)
     connection_table = Connection_Table()
     connection_table.load(connection_table_file)
+    connection_table.next()
     print 'Connection table file loaded successfully: '+connection_table_file
 
     molecule_helper = Molecule_Helper()

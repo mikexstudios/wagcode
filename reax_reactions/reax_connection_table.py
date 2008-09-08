@@ -114,8 +114,20 @@ class Connection_Table:
     def group_connect_and_bondorder_fields(self, fields, last_connection_column):
         '''
         Takes fields list that was taken from the fort.7 file and returns a list
-        where the first field is a sublist of connections and the second field
-        is a sublist of bondorders.
+        where the first element is the atom type (corresponding to the ffield
+        file), the next element is a sublist of connections in the form of tuple
+        pairs: (atom number, bond order). The final element is the molecule
+        number.
+
+        Sample output:
+        [9, [(3, 0.70899999999999996), (16, 0.71299999999999997), (18,
+        0.70599999999999996), (22, 0.69899999999999995), (0, 0.0), (0, 0.0), (0,
+        0.0), (0, 0.0), (0, 0.0), (0, 0.0)], 1]
+        ** 9 is the atom type, then followed by the atoms that this atom is
+        connected to, finally the molecule number which is 1 **
+
+        NOTE: We don't include the atom number here since the atom number is the
+        index of the row.
         '''
         connect_fields = fields[:last_connection_column] #Want only the first i fields
         bondorder_fields = fields[last_connection_column:-3] #Don't want the last 3 cols
