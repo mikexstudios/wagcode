@@ -116,6 +116,10 @@ def main():
     reactant_molecules = remove_molecule_duplicates(reactant_molecules)
     product_molecules = remove_molecule_duplicates(product_molecules)
 
+    #print product_molecules[3]
+    #print product_molecules[4]
+    #sys.exit(0)
+
     #2. Take each reactant and find products that share similar atoms.
     #We link reactants to products using a list of dictionaries:
     reactants_to_products_mapping = []
@@ -131,6 +135,33 @@ def main():
                 reactants_to_products_mapping[-1]['products'].append(
                     each_product_molecule
                 )
+    
+    #3. Now group the products together. From step #2, we know that we correctly
+    #   created the right side of the chemical reaction formula.
+    new_reactant_to_products_mapping = []
+    for i1, each_reactant_to_products_mapping in \
+        enumerate(reactants_to_products_mapping):
+        if each_reactant_to_products_mapping == None:
+            continue
+        for i2, each_reactant_to_products_mapping2 in \
+            enumerate(reactants_to_products_mapping):
+            if each_reactant_to_products_mapping2 == None:
+                continue
+            if i1 == i2: #Skip comparing to itself
+                continue
+            if each_reactant_to_products_mapping['products'] == \
+               each_reactant_to_products_mapping2['products']:
+                #Combine the reactants. There should be no exact duplicates
+                #(meaning that the atom numbers are the same) since we
+                #eliminated duplicates previously.
+                each_reactant_to_products_mapping['reactants'].extend(
+                    each_reactant_to_products_mapping2['reactants']
+                )
+                #"Zero" out the entry that we just combined so that we don't
+                #have to process it again:
+                reactants_to_products_mapping[i2] = None
+        new_reactant_to_products_mapping.append(each_reactant_to_products_mapping)
+    reactants_to_products_mapping = new_reactant_to_products_mapping 
                 
     #Output like chemical formulas:
     for each_reaction in reactants_to_products_mapping:
@@ -143,7 +174,6 @@ def main():
         reactant_formulas = ' + '.join(reactant_formulas)
         product_formulas = ' + '.join(product_formulas)
         print reactant_formulas+' -> '+product_formulas
-
 
 
 def do_molecules_share_similar_atoms(molecule1, molecule2):
