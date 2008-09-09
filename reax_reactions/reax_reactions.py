@@ -86,14 +86,104 @@ def main():
         just_changed_atoms.append(each_changed_atom_entry[0])
         just_changed_atoms.append(each_changed_atom_entry[1])
     changed_atom_numbers = set(just_changed_atoms)
+   
+    #Now output the 
+    #connection_table.rows = connection_table_current
+    #for each_changed_atom_number in changed_atom_numbers:
+    #    molecule_atom_list =  molecule_helper.get_molecule_for_atom(each_changed_atom_number)
+    #    print molecule_helper.atom_label_list_to_formula(
+    #            molecule_helper.get_atom_label_list_from_molecule(
+    #                molecule_atom_list
+    #            ))
 
+    #We want to connect reactants to products. See my notebook vol 2, p99 for
+    #more explanation.
+    #1. Get molecule from changed atoms. First, from reactants:
+    reactant_molecules = []
+    connection_table.rows = connection_table_current
     for each_changed_atom_number in changed_atom_numbers:
-        molecule_atom_list =  molecule_helper.get_molecule_for_atom(each_changed_atom_number)
-        print molecule_helper.atom_label_list_to_formula(
-                molecule_helper.get_atom_label_list_from_molecule(
-                    molecule_atom_list
-                ))
-            
+         reactant_molecules.append(
+             molecule_helper.get_molecule_for_atom(each_changed_atom_number)
+         )
+    #From products:
+    product_molecules = []
+    connection_table.rows = connection_table_next
+    for each_changed_atom_number in changed_atom_numbers:
+         product_molecules.append(
+             molecule_helper.get_molecule_for_atom(each_changed_atom_number)
+         )
+    #Now get rid of exact duplicates:
+    reactant_molecules = remove_molecule_duplicates(reactant_molecules)
+    product_molecules = remove_molecule_duplicates(product_molecules)
+
+    #2. Take each reactant and find products that share similar atoms.
+    #We link reactants to products using a list of dictionaries:
+    reactants_to_products_mapping = []
+    for each_reactant_molecule in reactant_molecules:
+        reactants_to_products_mapping.append(
+            {'reactants': [each_reactant_molecule],
+             'products': []}
+        )
+        for each_product_molecule in product_molecules:
+            if do_molecules_share_similar_atoms(
+                each_reactant_molecule, each_product_molecule) == True:
+                #Add to our mapping
+                reactants_to_products_mapping[-1]['products'].append(
+                    each_product_molecule
+                )
+                
+    #Output like chemical formulas:
+    for each_reaction in reactants_to_products_mapping:
+        #Get chemical formula...
+        reactant_formulas = map(molecule_helper.molecule_to_chemical_formula,
+                                each_reaction['reactants'])
+        product_formulas = map(molecule_helper.molecule_to_chemical_formula,
+                               each_reaction['products'])
+        #List to string:
+        reactant_formulas = ' + '.join(reactant_formulas)
+        product_formulas = ' + '.join(product_formulas)
+        print reactant_formulas+' -> '+product_formulas
+
+
+
+def do_molecules_share_similar_atoms(molecule1, molecule2):
+    '''
+    Given two molecules (a dictionary with atom numbers as keys and atom labels
+    as values), returns True if the two molecules share at least one atom.
+    Returns False if the two molecules do not share any atoms.
+    '''
+    for molecule1_atom_number in molecule1.keys():
+        for molecule2_atom_number in molecule2.keys():
+            if molecule1_atom_number == molecule2_atom_number:
+                return True
+    return False
+
+
+def remove_molecule_duplicates(molecule_list):
+    '''
+    Given a list of molecules (each element is a dictionary with atom numbers as
+    keys and atom label as values), removes duplicates from that list.
+    '''
+    #Since we are removing things, we won't want to mess with the original list.
+    molecule_list_copy = molecule_list[:]
+    new_molecule_list = []
+    for each_i, each_molecule in enumerate(molecule_list_copy):
+        if each_molecule == None:
+            continue
+        #Match this against all the other molecules
+        for other_i, other_molecule in enumerate(molecule_list_copy):
+            if each_molecule == None:
+                continue
+            if each_i == other_i:
+                continue #This is the same molecule, so we skip.
+            #We do a dictionary comparsion, if all the keys and values are the
+            #same, then this is True:
+            if each_molecule == other_molecule:
+                molecule_list_copy[other_i] = None
+        #Add this molecule to the new list. Copies won't be added since the
+        #copies are None, which are skipped.
+        new_molecule_list.append(each_molecule)
+    return new_molecule_list
 
 def get_atoms_that_have_connection_changes(connection_table_a, \
     connection_table_b, bondorder_cutoff):
@@ -246,9 +336,25 @@ def tests():
     connection_table_next = connection_table.next() #We don't need to make copy here.
    
     #get_atoms_that_have_connection_changes tests:
-    print get_atoms_that_have_connection_changes(connection_table_current,
-                                                 connection_table_next,
-                                                 bondorder_cutoff)
+    #print get_atoms_that_have_connection_changes(connection_table_current,
+    #                                             connection_table_next,
+    #                                             bondorder_cutoff)
+
+    #Test list duplication removal:
+    assert remove_molecule_duplicates(
+        [{1: 'H', 2: 'H', 3: 'O'}, {13: 'Ti', 8: 'O', 10: 'O'}, 
+         {1: 'H', 2: 'H', 3: 'O'}, {1: 'H', 2: 'H', 3: 'O', 4: 'O'}]) == \
+        [{1: 'H', 2: 'H', 3: 'O'}, {13: 'Ti', 8: 'O', 10: 'O'}, 
+         {1: 'H', 2: 'H', 3: 'O', 4: 'O'}]
+    
+    assert do_molecules_share_similar_atoms(
+        {1: 'H', 2: 'H', 3: 'O'}, {13: 'Ti', 8: 'O', 10: 'O'}
+    ) == False
+    assert do_molecules_share_similar_atoms(
+        {1: 'H', 2: 'H', 3: 'O'}, {1: 'H', 3: 'O', 2: 'H'}
+    ) == True 
+       
+      
 
     print 'All tests completed successfully!'
     sys.exit(0)

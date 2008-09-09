@@ -162,13 +162,33 @@ class Molecule_Helper:
                 molecular_formula += str(atoms_dict[atom_label])
         return molecular_formula
 
+    def molecule_to_chemical_formula(self, molecule_atom_list):
+        '''
+        Given a molecule (in dictionary format), returns the chemical formula.
+        This removes any ability to uniquely identify the molecule. But it's
+        easier to read.
+
+        This method is just a wrapper around get_atom_label_list_from_molecule 
+        and atom_label_list_to_formula since I find myself using both functions
+        together a lot.
+
+        Sample return:
+        'H2O'
+        '''
+    	return self.atom_label_list_to_formula(
+            self.get_atom_label_list_from_molecule(
+                molecule_atom_list
+            )
+        )
+
+
     def molecule_list_to_frequency_dict(self, in_molecule_list):
         '''
         Given a molecule list (in dictionary format, probably returned from the
         get_all_molecules(...) method), returns a dictionary of molecule formula
         and frequency.
 
-        Sample output:
+        Sample return:
         {'H2O': 5, 'H2': 2}
         '''
         molecule_dict = {}
