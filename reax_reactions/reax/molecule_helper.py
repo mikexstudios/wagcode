@@ -20,6 +20,8 @@ __copyright__ = 'General Public License (GPL)'
 #import math
 import sys #for exit
 #import re
+import hashlib #only for python 2.5+
+import pickle #convert object to string for eventual hashing
 
 class Molecule_Helper:
     #Define some class variables:
@@ -27,6 +29,9 @@ class Molecule_Helper:
     connection_table_class = None
 
     bondorder_cutoff = 0.30 #used by get_molecule_for_atom(...)
+
+    #Used by molecule number methods:
+    molecule_list = [] #Keeps track of the molecules we assign numbers too.
 
     def __init__(self):
         pass
@@ -162,7 +167,8 @@ class Molecule_Helper:
                 molecular_formula += str(atoms_dict[atom_label])
         return molecular_formula
 
-    def molecule_to_chemical_formula(self, molecule_atom_list):
+    def molecule_to_chemical_formula(self, molecule_atom_list,
+                                     include_molecule_number=False):
         '''
         Given a molecule (in dictionary format), returns the chemical formula.
         This removes any ability to uniquely identify the molecule. But it's
@@ -175,11 +181,15 @@ class Molecule_Helper:
         Sample return:
         'H2O'
         '''
-    	return self.atom_label_list_to_formula(
+    	chemical_formula = self.atom_label_list_to_formula(
             self.get_atom_label_list_from_molecule(
                 molecule_atom_list
             )
         )
+        if include_molecule_number == True:
+            chemical_formula += \
+                ' ('+str(self.get_molecule_number(molecule_atom_list))+')'
+        return chemical_formula
 
 
     def molecule_list_to_frequency_dict(self, in_molecule_list):
@@ -202,6 +212,34 @@ class Molecule_Helper:
                 #Means that this is our first encounter with this molecule:
                 molecule_dict[molecule_formula] = 1
         return molecule_dict
+
+    def give_molecule_a_number(self, molecule):
+        '''
+        Given a molecule (in dictionary format), adds this molecule to our
+        internal list of molecules and returns a number that is unique to this
+        molecule.
+        '''
+        self.molecule_list.append(molecule)
+
+        return len(self.molecule_list)-1 #since lists start at index 0
+
+    def get_molecule_number(self, molecule):
+        '''
+        Given a molecule (in dictionary format), returns the unique number of
+        this molecule. If the molecule didn't already exist in the dictionary,
+        then it will be automatically added and the molecule number returned.
+
+        NOTE: Currently this method searches through the whole list. As the list
+        grows, we scale like O(n). But keep in mind that we also need to do an
+        O(n) comparison of the molecule dictionaries too. In worse case, we'll
+        have O(n^2) runtime. This all can be optimized by using dictionary and
+        hashes, see p100 of vol 2 of my notebook.
+        '''
+        for i, each_molecule in enumerate(self.molecule_list):
+            if molecule == each_molecule:
+                return i
+        #Molecule was not found. So we'll add it:
+        return self.give_molecule_a_number(molecule)
 
 def tests():
     #Currently assume some relative path stuff. This is apt to change once we

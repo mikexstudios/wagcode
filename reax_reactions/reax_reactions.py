@@ -149,27 +149,53 @@ def main():
                 continue
             if i1 == i2: #Skip comparing to itself
                 continue
-            if each_reactant_to_products_mapping['products'] == \
-               each_reactant_to_products_mapping2['products']:
-                #Combine the reactants. There should be no exact duplicates
-                #(meaning that the atom numbers are the same) since we
-                #eliminated duplicates previously.
-                each_reactant_to_products_mapping['reactants'].extend(
-                    each_reactant_to_products_mapping2['reactants']
-                )
-                #"Zero" out the entry that we just combined so that we don't
-                #have to process it again:
-                reactants_to_products_mapping[i2] = None
+            #If there is more than one product, we need to compare to each one.
+            product_comparison_break = False #helps us break out of two 'for' loops
+            for each_product in each_reactant_to_products_mapping['products']:
+                if product_comparison_break == True:
+                    break
+                for each_product2 in each_reactant_to_products_mapping2['products']:
+                    if each_product == each_product2: 
+                        #As long as we have one match, we'll combine both
+                        #reactions. There should be no exact duplicates in the
+                        #reactants side (meaning that the atom numbers are the
+                        #same) since we eliminated duplicates previously.
+                        each_reactant_to_products_mapping['reactants'].extend(
+                            each_reactant_to_products_mapping2['reactants']
+                        )
+                        #Also, the products side that has more products will be
+                        #the dominant one.
+                        #ie. OH vs H + OH. H + OH will dominate since it includes
+                        #    OH.
+                        if len(each_reactant_to_products_mapping2['products']) > \
+                           len(each_reactant_to_products_mapping['products']):
+                            each_reactant_to_products_mapping['products'] = \
+                               each_reactant_to_products_mapping2['products']
+                        #"Zero" out the entry that we just combined so that we don't
+                        #have to process it again:
+                        reactants_to_products_mapping[i2] = None
+                        #Break out of this comparison:
+                        product_comparison_break = True
+                        break
         new_reactant_to_products_mapping.append(each_reactant_to_products_mapping)
     reactants_to_products_mapping = new_reactant_to_products_mapping 
                 
     #Output like chemical formulas:
+    def molecule_to_chemical_formula_wrapper(molecule):
+        '''
+        Allows us to pass extra args when using map.
+        '''
+        return molecule_helper.molecule_to_chemical_formula(
+            molecule, True
+        )
     for each_reaction in reactants_to_products_mapping:
-        #Get chemical formula...
-        reactant_formulas = map(molecule_helper.molecule_to_chemical_formula,
+        #Get chemical formula. We include the molecule number next to each
+        #formula:
+        reactant_formulas = map(molecule_to_chemical_formula_wrapper,
                                 each_reaction['reactants'])
-        product_formulas = map(molecule_helper.molecule_to_chemical_formula,
+        product_formulas = map(molecule_to_chemical_formula_wrapper,
                                each_reaction['products'])
+
         #List to string:
         reactant_formulas = ' + '.join(reactant_formulas)
         product_formulas = ' + '.join(product_formulas)
