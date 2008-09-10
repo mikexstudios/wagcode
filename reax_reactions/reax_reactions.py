@@ -22,7 +22,9 @@ from XYZ import XYZ #XYZ class
 from reax_connection_table import Connection_Table
 from reax.molecule_helper import Molecule_Helper
 
-#Arguments
+#Arguments. Set some defaults before the control file in case the user does not
+#define them.
+suppress_molecule_rearrangment = False
 try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
@@ -179,7 +181,16 @@ def main():
                         break
         new_reactant_to_products_mapping.append(each_reactant_to_products_mapping)
     reactants_to_products_mapping = new_reactant_to_products_mapping 
-                
+    
+    #Suppress molecule rearrangement if needed. We define molecule rearragement
+    #as when molecules on both sides of a reaction are the same!
+    if suppress_molecule_rearrangment == True:
+        new_reactant_to_products_mapping = []
+        for each_mapping in reactant_to_products_mapping:
+            if each_mapping['reactants'] != each_mapping['products']:
+                new_reactant_to_products_mapping.append(each_mapping)
+        reactants_to_products_mapping = new_reactant_to_products_mapping
+
     #Output like chemical formulas:
     def molecule_to_chemical_formula_wrapper(molecule):
         '''

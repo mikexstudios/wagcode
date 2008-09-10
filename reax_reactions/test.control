@@ -23,3 +23,9 @@ output_file = os.path.splitext(control_file)[0]+'.tsv'
 #excluding hydrogen bonds from being processed when determining what the
 #"molecule" is for a given atom.
 bondorder_cutoff = 0.65
+
+#Suppress molecule rearrangement. If set to True, reactions that involve atoms
+#rearranging inside of the molecule will not be output. An example of atom
+#rearraging is: HO20Ti10 -> HO20Ti10. It's the same molecule, there is either a
+#bond breaking or bond forming, but it's all contained in the molecule.
+suppress_molecule_rearrangment = True
