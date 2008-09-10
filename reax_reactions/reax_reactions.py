@@ -185,11 +185,11 @@ def main():
     #Suppress molecule rearrangement if needed. We define molecule rearragement
     #as when molecules on both sides of a reaction are the same!
     if suppress_molecule_rearrangment == True:
-        new_reactant_to_products_mapping = []
-        for each_mapping in reactant_to_products_mapping:
+        new_reactants_to_products_mapping = []
+        for each_mapping in reactants_to_products_mapping:
             if each_mapping['reactants'] != each_mapping['products']:
-                new_reactant_to_products_mapping.append(each_mapping)
-        reactants_to_products_mapping = new_reactant_to_products_mapping
+                new_reactants_to_products_mapping.append(each_mapping)
+        reactants_to_products_mapping = new_reactants_to_products_mapping
 
     #Output like chemical formulas:
     def molecule_to_chemical_formula_wrapper(molecule):
