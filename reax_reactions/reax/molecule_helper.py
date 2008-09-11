@@ -241,6 +241,29 @@ class Molecule_Helper:
         #Molecule was not found. So we'll add it:
         return self.give_molecule_a_number(molecule)
 
+    def save_molecule_list(self, output_file):
+        '''
+        Given an output filename, will save the molecule_list data structure
+        into that file.
+
+        Essentially, we are pickleing that data structure. The point is that we
+        can save this molecule_list state so that we don't have to rerun the
+        reaction analysis from the beginning if we want to do further analysis
+        on it.
+        '''
+        f = file(output_file, 'wb')
+        pickle.dump(self.molecule_list, f)
+        f.close()
+
+    def load_molecule_list(self, input_file):
+        '''
+        Given an input file that contains the pickled binary data of
+        molecule_list, will load it into self.molecule_list.
+        '''
+        f = file(input_file, 'rb')
+        self.molecule_list = pickle.load(f)
+        f.close()
+
 def tests():
     #Currently assume some relative path stuff. This is apt to change once we
     #make this into a module.

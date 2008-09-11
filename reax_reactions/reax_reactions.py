@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf8 -*-
 '''
 reax_reactions.py
 -----------------
@@ -21,6 +22,12 @@ import os #For file exist check and splitext and path stuff
 from XYZ import XYZ #XYZ class
 from reax_connection_table import Connection_Table
 from reax.molecule_helper import Molecule_Helper
+
+#Since we want to use /usr/bin/env to invoke python, we can't pass the -u flag
+#to the interpreter in order to get unbuffered output. Nor do we want to rely on
+#the environment variable PYTHONUNBUFFERED. Therefore, the only solution is to
+#reopen stdout as write mode with 0 as the buffer:
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) 
 
 #Arguments. Set some defaults before the control file in case the user does not
 #define them.
@@ -49,7 +56,6 @@ def main():
     #Read in connection table (ReaxFF fort.7 style, see ReaxFF manual for more info)
     connection_table = Connection_Table()
     connection_table.load(connection_table_file)
-    connection_table.next()
     print 'Connection table file loaded successfully: '+connection_table_file
 
     #The molecule helper class provides methods for working with both the XYZ
@@ -58,160 +64,190 @@ def main():
     molecule_helper.simulation_atoms_class = simulation_atoms
     molecule_helper.connection_table_class = connection_table
     molecule_helper.bondorder_cutoff = bondorder_cutoff
+
+    #Open output file for writing:
+    rxns_f = file(rxns_output_file, 'w')
     
-    ##Get list of molecules for the current iteration. Each molecule will be
-    ##defined as a tuple of (atom number, atom type).
+    #Pretty/Instructional Output Stuff:
+    #print '(NOTE: The molecule numbers are printed in parentheses. ie. (3). The'+\
+    #      'full table of molecules will be written to a binary file.)'
+    #print
+    
+    rxns_f.write('#(NOTE: The molecule numbers are printed in parentheses. '+\
+                 'ie. (3). The full table of molecules will be written to '+ 
+                 'a binary file.)'+"\n\n")
+    
+    print 'Finding reactions',
 
-    #molecules_list_current_iter = molecule_helper.get_all_molecules()
-    #print molecule_helper.molecule_list_to_frequency_dict(molecules_list_current_iter)
+    #Loop through all iterations. We are doing a do...while type loop here:
+    connection_table_current = connection_table.next()
+    for connection_table_next in connection_table:
+        #We say that these are the reactions for the current iteration (and not
+        #'from previous iteration to this iteration' just for simplicity.
+        #print 'Reaction(s) for iteration: '+str(connection_table.iteration)
+        #print '-------------------------------------------'
+        #print
+        rxns_f.write('Reaction(s) for iteration: '+str(connection_table.iteration)+"\n")
+        rxns_f.write('-------------------------------------------'+"\n\n")
 
-    ##Get list of molecules for the next iteration:
-    #connection_table.next()
-    #molecules_list_next_iter = molecule_helper.get_all_molecules()
-    #print molecule_helper.molecule_list_to_frequency_dict(molecules_list_next_iter)
-
-    #Diff the two sets of molecules based on change in bond order. Figure out
-    #which atoms have bond orders that were originally below the BO cutoff and
-    #are now equal to or above the BO cutoff. This gives the atoms that have
-    #changed connectivity.
-    connection_table_current = connection_table.rows[:]
-    connection_table_next = connection_table.next() #We don't need to make copy here.
-    changed_atoms_entries = get_atoms_that_have_connection_changes(connection_table_current,
-                        connection_table_next, bondorder_cutoff)
-    #Then take these atoms that have changed, and get the molecule that
-    #corresponds to it. First, let's transform the output we get into just a
-    #list of changed atoms. Our approach is to put all the atoms into a list.
-    #Then convert it into a set since that automatically eliminates all duplicate
-    #elements.
-    just_changed_atoms = []
-    for each_changed_atom_entry in changed_atoms_entries:
-        just_changed_atoms.append(each_changed_atom_entry[0])
-        just_changed_atoms.append(each_changed_atom_entry[1])
-    changed_atom_numbers = set(just_changed_atoms)
+        #Diff the two sets of molecules based on change in bond order. Figure out
+        #which atoms have bond orders that were originally below the BO cutoff and
+        #are now equal to or above the BO cutoff. This gives the atoms that have
+        #changed connectivity.
+        changed_atoms_entries = get_atoms_that_have_connection_changes(connection_table_current,
+                            connection_table_next, bondorder_cutoff)
+        #Then take these atoms that have changed, and get the molecule that
+        #corresponds to it. First, let's transform the output we get into just a
+        #list of changed atoms. Our approach is to put all the atoms into a list.
+        #Then convert it into a set since that automatically eliminates all duplicate
+        #elements.
+        just_changed_atoms = []
+        for each_changed_atom_entry in changed_atoms_entries:
+            just_changed_atoms.append(each_changed_atom_entry[0])
+            just_changed_atoms.append(each_changed_atom_entry[1])
+        changed_atom_numbers = set(just_changed_atoms)
    
-    #Now output the 
-    #connection_table.rows = connection_table_current
-    #for each_changed_atom_number in changed_atom_numbers:
-    #    molecule_atom_list =  molecule_helper.get_molecule_for_atom(each_changed_atom_number)
-    #    print molecule_helper.atom_label_list_to_formula(
-    #            molecule_helper.get_atom_label_list_from_molecule(
-    #                molecule_atom_list
-    #            ))
+        #Now output the 
+        #connection_table.rows = connection_table_current
+        #for each_changed_atom_number in changed_atom_numbers:
+        #    molecule_atom_list =  molecule_helper.get_molecule_for_atom(each_changed_atom_number)
+        #    print molecule_helper.atom_label_list_to_formula(
+        #            molecule_helper.get_atom_label_list_from_molecule(
+        #                molecule_atom_list
+        #            ))
 
-    #We want to connect reactants to products. See my notebook vol 2, p99 for
-    #more explanation.
-    #1. Get molecule from changed atoms. First, from reactants:
-    reactant_molecules = []
-    connection_table.rows = connection_table_current
-    for each_changed_atom_number in changed_atom_numbers:
-         reactant_molecules.append(
-             molecule_helper.get_molecule_for_atom(each_changed_atom_number)
-         )
-    #From products:
-    product_molecules = []
-    connection_table.rows = connection_table_next
-    for each_changed_atom_number in changed_atom_numbers:
-         product_molecules.append(
-             molecule_helper.get_molecule_for_atom(each_changed_atom_number)
-         )
-    #Now get rid of exact duplicates:
-    reactant_molecules = remove_molecule_duplicates(reactant_molecules)
-    product_molecules = remove_molecule_duplicates(product_molecules)
+        #We want to connect reactants to products. See my notebook vol 2, p99 for
+        #more explanation.
+        #1. Get molecule from changed atoms. First, from reactants:
+        reactant_molecules = []
+        connection_table.rows = connection_table_current
+        for each_changed_atom_number in changed_atom_numbers:
+             reactant_molecules.append(
+                 molecule_helper.get_molecule_for_atom(each_changed_atom_number)
+             )
+        #From products:
+        product_molecules = []
+        connection_table.rows = connection_table_next
+        for each_changed_atom_number in changed_atom_numbers:
+             product_molecules.append(
+                 molecule_helper.get_molecule_for_atom(each_changed_atom_number)
+             )
+        #Now get rid of exact duplicates:
+        reactant_molecules = remove_molecule_duplicates(reactant_molecules)
+        product_molecules = remove_molecule_duplicates(product_molecules)
 
-    #print product_molecules[3]
-    #print product_molecules[4]
-    #sys.exit(0)
+        #print product_molecules[3]
+        #print product_molecules[4]
+        #sys.exit(0)
 
-    #2. Take each reactant and find products that share similar atoms.
-    #We link reactants to products using a list of dictionaries:
-    reactants_to_products_mapping = []
-    for each_reactant_molecule in reactant_molecules:
-        reactants_to_products_mapping.append(
-            {'reactants': [each_reactant_molecule],
-             'products': []}
-        )
-        for each_product_molecule in product_molecules:
-            if do_molecules_share_similar_atoms(
-                each_reactant_molecule, each_product_molecule) == True:
-                #Add to our mapping
-                reactants_to_products_mapping[-1]['products'].append(
-                    each_product_molecule
-                )
-    
-    #3. Now group the products together. From step #2, we know that we correctly
-    #   created the right side of the chemical reaction formula.
-    new_reactant_to_products_mapping = []
-    for i1, each_reactant_to_products_mapping in \
-        enumerate(reactants_to_products_mapping):
-        if each_reactant_to_products_mapping == None:
-            continue
-        for i2, each_reactant_to_products_mapping2 in \
+        #2. Take each reactant and find products that share similar atoms.
+        #We link reactants to products using a list of dictionaries:
+        reactants_to_products_mapping = []
+        for each_reactant_molecule in reactant_molecules:
+            reactants_to_products_mapping.append(
+                {'reactants': [each_reactant_molecule],
+                 'products': []}
+            )
+            for each_product_molecule in product_molecules:
+                if do_molecules_share_similar_atoms(
+                    each_reactant_molecule, each_product_molecule) == True:
+                    #Add to our mapping
+                    reactants_to_products_mapping[-1]['products'].append(
+                        each_product_molecule
+                    )
+        
+        #3. Now group the products together. From step #2, we know that we correctly
+        #   created the right side of the chemical reaction formula.
+        new_reactant_to_products_mapping = []
+        for i1, each_reactant_to_products_mapping in \
             enumerate(reactants_to_products_mapping):
-            if each_reactant_to_products_mapping2 == None:
+            if each_reactant_to_products_mapping == None:
                 continue
-            if i1 == i2: #Skip comparing to itself
-                continue
-            #If there is more than one product, we need to compare to each one.
-            product_comparison_break = False #helps us break out of two 'for' loops
-            for each_product in each_reactant_to_products_mapping['products']:
-                if product_comparison_break == True:
-                    break
-                for each_product2 in each_reactant_to_products_mapping2['products']:
-                    if each_product == each_product2: 
-                        #As long as we have one match, we'll combine both
-                        #reactions. There should be no exact duplicates in the
-                        #reactants side (meaning that the atom numbers are the
-                        #same) since we eliminated duplicates previously.
-                        each_reactant_to_products_mapping['reactants'].extend(
-                            each_reactant_to_products_mapping2['reactants']
-                        )
-                        #Also, the products side that has more products will be
-                        #the dominant one.
-                        #ie. OH vs H + OH. H + OH will dominate since it includes
-                        #    OH.
-                        if len(each_reactant_to_products_mapping2['products']) > \
-                           len(each_reactant_to_products_mapping['products']):
-                            each_reactant_to_products_mapping['products'] = \
-                               each_reactant_to_products_mapping2['products']
-                        #"Zero" out the entry that we just combined so that we don't
-                        #have to process it again:
-                        reactants_to_products_mapping[i2] = None
-                        #Break out of this comparison:
-                        product_comparison_break = True
+            for i2, each_reactant_to_products_mapping2 in \
+                enumerate(reactants_to_products_mapping):
+                if each_reactant_to_products_mapping2 == None:
+                    continue
+                if i1 == i2: #Skip comparing to itself
+                    continue
+                #If there is more than one product, we need to compare to each one.
+                product_comparison_break = False #helps us break out of two 'for' loops
+                for each_product in each_reactant_to_products_mapping['products']:
+                    if product_comparison_break == True:
                         break
-        new_reactant_to_products_mapping.append(each_reactant_to_products_mapping)
-    reactants_to_products_mapping = new_reactant_to_products_mapping 
+                    for each_product2 in each_reactant_to_products_mapping2['products']:
+                        if each_product == each_product2: 
+                            #As long as we have one match, we'll combine both
+                            #reactions. There should be no exact duplicates in the
+                            #reactants side (meaning that the atom numbers are the
+                            #same) since we eliminated duplicates previously.
+                            each_reactant_to_products_mapping['reactants'].extend(
+                                each_reactant_to_products_mapping2['reactants']
+                            )
+                            #Also, the products side that has more products will be
+                            #the dominant one.
+                            #ie. OH vs H + OH. H + OH will dominate since it includes
+                            #    OH.
+                            if len(each_reactant_to_products_mapping2['products']) > \
+                               len(each_reactant_to_products_mapping['products']):
+                                each_reactant_to_products_mapping['products'] = \
+                                   each_reactant_to_products_mapping2['products']
+                            #"Zero" out the entry that we just combined so that we don't
+                            #have to process it again:
+                            reactants_to_products_mapping[i2] = None
+                            #Break out of this comparison:
+                            product_comparison_break = True
+                            break
+            new_reactant_to_products_mapping.append(each_reactant_to_products_mapping)
+        reactants_to_products_mapping = new_reactant_to_products_mapping 
+        
+        #Suppress molecule rearrangement if needed. We define molecule rearragement
+        #as when molecules on both sides of a reaction are the same!
+        if suppress_molecule_rearrangment == True:
+            new_reactants_to_products_mapping = []
+            for each_mapping in reactants_to_products_mapping:
+                if each_mapping['reactants'] != each_mapping['products']:
+                    new_reactants_to_products_mapping.append(each_mapping)
+            reactants_to_products_mapping = new_reactants_to_products_mapping
+
+        #Output like chemical formulas:
+        def molecule_to_chemical_formula_wrapper(molecule):
+            '''
+            Allows us to pass extra args when using map.
+            '''
+            return molecule_helper.molecule_to_chemical_formula(
+                molecule, True
+            )
+        for each_reaction in reactants_to_products_mapping:
+            #Get chemical formula. We include the molecule number next to each
+            #formula:
+            reactant_formulas = map(molecule_to_chemical_formula_wrapper,
+                                    each_reaction['reactants'])
+            product_formulas = map(molecule_to_chemical_formula_wrapper,
+                                   each_reaction['products'])
+
+            #List to string:
+            reactant_formulas = ' + '.join(reactant_formulas)
+            product_formulas = ' + '.join(product_formulas)
+            #print reactant_formulas+' -> '+product_formulas
+            #print
+            rxns_f.write(reactant_formulas+' -> '+product_formulas+"\n\n")
     
-    #Suppress molecule rearrangement if needed. We define molecule rearragement
-    #as when molecules on both sides of a reaction are the same!
-    if suppress_molecule_rearrangment == True:
-        new_reactants_to_products_mapping = []
-        for each_mapping in reactants_to_products_mapping:
-            if each_mapping['reactants'] != each_mapping['products']:
-                new_reactants_to_products_mapping.append(each_mapping)
-        reactants_to_products_mapping = new_reactants_to_products_mapping
-
-    #Output like chemical formulas:
-    def molecule_to_chemical_formula_wrapper(molecule):
-        '''
-        Allows us to pass extra args when using map.
-        '''
-        return molecule_helper.molecule_to_chemical_formula(
-            molecule, True
-        )
-    for each_reaction in reactants_to_products_mapping:
-        #Get chemical formula. We include the molecule number next to each
-        #formula:
-        reactant_formulas = map(molecule_to_chemical_formula_wrapper,
-                                each_reaction['reactants'])
-        product_formulas = map(molecule_to_chemical_formula_wrapper,
-                               each_reaction['products'])
-
-        #List to string:
-        reactant_formulas = ' + '.join(reactant_formulas)
-        product_formulas = ' + '.join(product_formulas)
-        print reactant_formulas+' -> '+product_formulas
-
+        #Alright, let's move on to the next iteration,
+        connection_table_current = connection_table_next
+        #print
+        #Give some indication of progress:
+        print '.',
+        rxns_f.write("\n")
+    
+    rxns_f.close()
+    print
+    print 'Successfully found reactions for every i to i+1 iteration: '+\
+            rxns_output_file
+    
+    #Now that we generated all the reactions for i and i+1, let's output the
+    #molecule dictionary as a pickled file.
+    molecule_helper.save_molecule_list(molecules_output_file)
+    print 'Successfully saved molecule list in binary format: '+molecules_output_file
 
 def do_molecules_share_similar_atoms(molecule1, molecule2):
     '''
