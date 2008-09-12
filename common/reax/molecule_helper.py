@@ -20,7 +20,7 @@ __copyright__ = 'General Public License (GPL)'
 #import math
 import sys #for exit
 #import re
-import hashlib #only for python 2.5+
+#import hashlib #only for python 2.5+
 import pickle #convert object to string for eventual hashing
 
 class Molecule_Helper:
