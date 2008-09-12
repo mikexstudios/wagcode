@@ -20,7 +20,7 @@ import os #For file exist check and splitext and path stuff
 #import math
 #import re #For regex
 from XYZ import XYZ #XYZ class
-from reax_connection_table import Connection_Table
+from reax.connection_table import Connection_Table
 from reax.molecule_helper import Molecule_Helper
 
 #Since we want to use /usr/bin/env to invoke python, we can't pass the -u flag
