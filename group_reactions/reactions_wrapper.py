@@ -38,7 +38,14 @@ class Reactions_Wrapper:
 
     def next(self):
         '''
-        Loads the next iteration of reactions and returns it.
+        Loads the next iteration of reactions and returns it. 
+
+        Returns a list of dictionaries. The dictionaries have keys 'reactants'
+        and 'products'. The values are tuples with first element being molecule
+        number, second element being molecule formula. Sample return:
+        [{'reactants': [(1, 'H'), (2, 'O')], 'products': [(3, 'H2O')]},
+         {'reactants': ..., 'products': ...}, 
+         etc.]
         '''
         f = self.f #Just to simplify things
 
@@ -90,33 +97,25 @@ class Reactions_Wrapper:
             reaction_molecules = []
             for each_mol_with_num in reaction_molecules_with_num:
                 each_mol_with_num = each_mol_with_num.strip()
-                chemical_formula_number_match = \
-                    chemical_formula_number_regex.match(each_mol_with_num)
-                if chemical_formula_number_match:
-                    molecule_formula = chemical_formula_number_match.group(1)
-                    molecule_number = chemical_formula_number_match.group(2)
-                    #Add to our list as a tuple:
+                #Add to our list as a tuple:
+                parsed_molecule_formula_with_number = \
+                    self.parse_molecule_formula_with_number(each_mol_with_num)
+                if parsed_molecule_formula_with_number != False:
                     reaction_molecules.append(
-                        (molecule_number, molecule_formula)
+                        parsed_molecule_formula_with_number
                     )
-                else:
-                    print each_mol_with_num+' strangely did not match!'
 
             #Do the same with product molecules. 
             product_molecules = []
             for each_mol_with_num in product_molecules_with_num:
                 each_mol_with_num = each_mol_with_num.strip()
-                chemical_formula_number_match = \
-                    chemical_formula_number_regex.match(each_mol_with_num)
-                if chemical_formula_number_match:
-                    molecule_formula = chemical_formula_number_match.group(1)
-                    molecule_number = chemical_formula_number_match.group(2)
-                    #Add to our list as a tuple:
+                #Add to our list as a tuple:
+                parsed_molecule_formula_with_number = \
+                    self.parse_molecule_formula_with_number(each_mol_with_num)
+                if parsed_molecule_formula_with_number != False:
                     product_molecules.append(
-                        (molecule_number, molecule_formula)
+                        parsed_molecule_formula_with_number
                     )
-                else:
-                    print each_mol_with_num+' strangely did not match!'
 
             #Now place this parsed reaction in our mapping data structure:
             reactants_to_products_mapping.append(
@@ -126,12 +125,37 @@ class Reactions_Wrapper:
         
         return reactants_to_products_mapping
 
+    def parse_molecule_formula_with_number(self, in_formula_with_number):
+        '''
+        Given a molecular formula with the molecule number in parentheses (ie.
+        H2O (1)), returns a tuple of the (molecule number, molecule formula).
+        '''
+        #The \w in regex means alphanumeric and _
+        #NOTE: This regex is fairly specific because we are relying on the fact
+        #      that reax_reactions will output these in this specific way.
+        chemical_formula_number_regex = re.compile(
+            r'^(\w+) \((\d+)\).*'
+        )
+        
+        chemical_formula_number_match = \
+            chemical_formula_number_regex.match(in_formula_with_number)
+        if chemical_formula_number_match:
+            molecule_formula = chemical_formula_number_match.group(1)
+            molecule_number = int(chemical_formula_number_match.group(2))
+            return (molecule_number, molecule_formula)
+       
+        print each_mol_with_num+' strangely did not match!'
+        return False
+
 def tests():
     reactions = Reactions_Wrapper()
     reactions.load('test.rxns')
    
-    for each_reaction in reactions:
-        print reactions.iteration, each_reaction 
+    #for each_reaction in reactions:
+    #    print reactions.iteration, each_reaction 
+    
+    assert reactions.parse_molecule_formula_with_number('H2O (1)') == \
+            (1, 'H2O')
 
     print 'All tests completed successfully!'
     sys.exit(0)

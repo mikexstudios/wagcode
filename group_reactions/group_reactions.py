@@ -22,6 +22,8 @@ import os #For file exist check and splitext and path stuff
 #from XYZ import XYZ #XYZ class
 #from reax.connection_table import Connection_Table
 #from reax.molecule_helper import Molecule_Helper
+from reactions_wrapper import Reactions_Wrapper
+import time
 
 #Since we want to use /usr/bin/env to invoke python, we can't pass the -u flag
 #to the interpreter in order to get unbuffered output. Nor do we want to rely on
@@ -47,7 +49,90 @@ print 'Read control file successfully: '+control_file
 
 
 def main():
+    #The idea is we want to read all the reaction into memory. We make the
+    #assumption that we'll always have more memory than the reactions we read in
+    #(which is very reasonable).
+    reactions = get_all_reactions(rxns_file)
+    print 'Parsed reaction file and loaded all reactions into memory: '+rxns_file
+
+    #Then, we start by taking a reaction and dumping all of those molecule
+    #numbers into a list. Then we search all other reactions for any molecule
+    #numbers that are in this list. If so, we also add those molecule numbers to
+    #the list. This continues until we've parsed through all of the reactions.
+    #For each reaction we parse, we zero it out by setting it to None.
+
     pass
+
+def get_molecule_numbers_in_reaction_pathway(reactions):
+    '''
+    Given the reactions data structure, returns a list of lists that contain
+    molecules that are in a reaction pathway (a group of reactions).
+    '''
+    reactions_copy = reactions[:] #Make copy since we are "zeroing" out
+    reactions_molecule_dictionary = {}
+    grouped_reactions = []
+    #Parse each reaction:
+    for i, each_reaction in enumerate(reactions_copy):
+        #Put all molecule numbers of this reaction in our dictionary for fast
+        #lookup:
+        molecule_numbers_for_reaction = get_molecule_numbers_from_reaction(
+                                            each_reaction
+                                        )
+        for each_molecule_number in molecule_numbers_for_reaction:
+            try:
+                reactions_molecule_dictionary[each_molecule_number]
+            except KeyError:
+                #We just want to make an entry for this molecule number.
+                reactions_molecule_dictionary[each_molecule_number] = True
+        #Now compare this reaction to all other reactions:
+        for i2, each_reaction2 in enumerate(reactions_copy):
+            if i == i2:
+                continue #Don't compare reaction to itself.
+            #We determine if molecule numbers in each_reaction2 are in
+            #molecule_numbers_for_reaction by seeing if the dictionary index
+            #exists.
+
+
+def get_molecule_numbers_from_reaction(reaction):
+    '''
+    Given a reaction (a dictionary with 'reactants' and 'product' keys and
+    list of (molecule number, molecule formula)), returns a list of molecule
+    numbers from that reaction.
+    '''
+    molecule_number_list = []
+    for each_reactant in reaction['reactants']:
+        molecule_number_list.append(each_reactant[0])
+    for each_product in reaction['products']:
+        molecule_number_list.append(each_product[0])
+    return molecule_number_list
+
+def get_all_reactions(rxns_file):
+    '''
+    Given a .rxns input file, returns a list of reaction entries.
+
+    The return data structure is pretty complex. It's a list of tuples of lists
+    of dictionaries which values being tuples. Example return:
+    [
+        (15, [{'reactants': [(1, 'H'), (2, 'O')], 'products': [(3, 'H2O')]},
+         {'reactants': ..., 'products': ...}, 
+         etc.]),
+        (30, [{'reactants': [(10, 'H'), (12, 'O')], 'products': [(13, 'H2O')]},
+         {'reactants': ..., 'products': ...}, 
+         etc.]),
+        etc.
+    ]
+    '''
+    reactions = Reactions_Wrapper()
+    reactions.load(rxns_file)
+    all_reactions = []
+    for each_reaction in reactions:
+        if each_reaction != []:
+            all_reactions.append(
+                (reactions.iteration, each_reaction)
+            )
+
+    return all_reactions
+
 
 
 def tests():
