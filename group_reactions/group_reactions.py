@@ -49,6 +49,8 @@ print 'Read control file successfully: '+control_file
 
 
 def main():
+    #reactions_wrapper = Reactions_Wrapper()
+
     #The idea is we want to read all the reaction into memory. We make the
     #assumption that we'll always have more memory than the reactions we read in
     #(which is very reasonable).
@@ -60,37 +62,92 @@ def main():
     #numbers that are in this list. If so, we also add those molecule numbers to
     #the list. This continues until we've parsed through all of the reactions.
     #For each reaction we parse, we zero it out by setting it to None.
+    grouped_reactions = group_reactions_in_reaction_pathway(reactions)
+   
+    for each_grouped_reaction in grouped_reactions:
+        print 'Begin grouped reaction'
+        print '-----------------------'
+        for each_reaction in each_grouped_reaction:
+            iteration, reaction_dict = each_reaction
+            output_string = str(iteration)+': ' #will get appended to
+            #Print out reactants:
+            reactant_formula_with_number = []
+            for each_reactant in reaction_dict['reactants']:
+                molecule_number, molecule_formula = each_reactant
+                reactant_formula_with_number.append(molecule_formula+\
+                                                    '('+str(molecule_number)+')')
+            output_string += ' + '.join(reactant_formula_with_number)
 
-    pass
+            output_string += ' -> '
 
-def get_molecule_numbers_in_reaction_pathway(reactions):
+            #Print out products:
+            product_formula_with_number = []
+            for each_product in reaction_dict['products']:
+                molecule_number, molecule_formula = each_product
+                product_formula_with_number.append(molecule_formula+\
+                                                    '('+str(molecule_number)+')')
+            output_string += ' + '.join(product_formula_with_number)
+
+            print output_string
+        print '-----------------------'
+        print 'End grouped reaction'
+        print
+
+def group_reactions_in_reaction_pathway(reactions):
     '''
     Given the reactions data structure, returns a list of lists that contain
-    molecules that are in a reaction pathway (a group of reactions).
+    (iteration, reaction dictionary) tuple.
     '''
     reactions_copy = reactions[:] #Make copy since we are "zeroing" out
     reactions_molecule_dictionary = {}
-    grouped_reactions = []
+    grouped_reactions = [] #Holds all grouped reactions
     #Parse each reaction:
     for i, each_reaction in enumerate(reactions_copy):
-        #Put all molecule numbers of this reaction in our dictionary for fast
-        #lookup:
-        molecule_numbers_for_reaction = get_molecule_numbers_from_reaction(
+        if each_reaction == None:
+            continue
+        #each_reaction is actually a tuple, but we'll remove it...
+        iteration, each_reaction = each_reaction
+        #Reset our grouped reactions:
+        temp_grouped_reactions = [] #Holds grouped reactions for current reaction
+        #Put all molecule numbers of this reaction in our set so that we can
+        #intersect this with other sets.
+        molecule_numbers_for_reaction = set(get_molecule_numbers_from_reaction(
                                             each_reaction
-                                        )
-        for each_molecule_number in molecule_numbers_for_reaction:
-            try:
-                reactions_molecule_dictionary[each_molecule_number]
-            except KeyError:
-                #We just want to make an entry for this molecule number.
-                reactions_molecule_dictionary[each_molecule_number] = True
+                                        ))
+        #Also add this reaction to our grouped reaction list:
+        temp_grouped_reactions.append(
+            (iteration, each_reaction)
+        )
         #Now compare this reaction to all other reactions:
         for i2, each_reaction2 in enumerate(reactions_copy):
+            if each_reaction2 == None:
+                continue
             if i == i2:
                 continue #Don't compare reaction to itself.
+            #Break the tuple up:
+            iteration2, each_reaction2 = each_reaction2
             #We determine if molecule numbers in each_reaction2 are in
-            #molecule_numbers_for_reaction by seeing if the dictionary index
-            #exists.
+            #molecule_numbers_for_reaction by seeing if we don't get an empty
+            #set when we intersect these two sets.
+            each_reaction2_molecule_numbers = set(get_molecule_numbers_from_reaction(
+                                                each_reaction2
+                                              ))
+            if len(molecule_numbers_for_reaction.intersection(
+                each_reaction2_molecule_numbers)) > 0:
+                #Means that we have at least one similar molecule. So we'll add
+                #these numbers to our set.
+                molecule_numbers_for_reaction = \
+                    molecule_numbers_for_reaction.union(each_reaction2_molecule_numbers)
+                #Also, add this reaction to our grouped reactions:
+                temp_grouped_reactions.append(
+                    (iteration2, each_reaction2)
+                )
+                #Now remove this reaction from our list:
+                reactions_copy[i2] = None
+
+        #Now place the grouped reactions into the bigger list:
+        grouped_reactions.append(temp_grouped_reactions)
+    return grouped_reactions
 
 
 def get_molecule_numbers_from_reaction(reaction):
@@ -113,29 +170,32 @@ def get_all_reactions(rxns_file):
     The return data structure is pretty complex. It's a list of tuples of lists
     of dictionaries which values being tuples. Example return:
     [
-        (15, [{'reactants': [(1, 'H'), (2, 'O')], 'products': [(3, 'H2O')]},
-         {'reactants': ..., 'products': ...}, 
-         etc.]),
-        (30, [{'reactants': [(10, 'H'), (12, 'O')], 'products': [(13, 'H2O')]},
-         {'reactants': ..., 'products': ...}, 
-         etc.]),
-        etc.
+        (15, {'reactants': [(1, 'H'), (2, 'O')], 'products': [(3, 'H2O')]}),
+        (15, {'reactants': ..., 'products': ...}), 
+        (30, {'reactants': [(10, 'H'), (12, 'O')], 'products': [(13, 'H2O')]}),
+        (30, {'reactants': ..., 'products': ...}), 
+        etc.,
     ]
     '''
     reactions = Reactions_Wrapper()
     reactions.load(rxns_file)
     all_reactions = []
-    for each_reaction in reactions:
-        if each_reaction != []:
-            all_reactions.append(
-                (reactions.iteration, each_reaction)
-            )
+    for each_iteration_reactions in reactions:
+        if each_iteration_reactions != []:
+            for each_reaction in each_iteration_reactions:
+                all_reactions.append(
+                    (reactions.iteration, each_reaction)
+                )
 
     return all_reactions
 
 
 
 def tests():
+    reactions = get_all_reactions(rxns_file)
+    print 'Parsed reaction file and loaded all reactions into memory: '+rxns_file
+   
+    print reactions
 
     print 'All tests completed successfully!'
     sys.exit(0)
