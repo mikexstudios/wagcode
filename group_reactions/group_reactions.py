@@ -22,7 +22,7 @@ import os #For file exist check and splitext and path stuff
 #from XYZ import XYZ #XYZ class
 #from reax.connection_table import Connection_Table
 #from reax.molecule_helper import Molecule_Helper
-from reactions_wrapper import Reactions_Wrapper
+from reax.reactions_wrapper import Reactions_Wrapper
 #import time
 
 #Since we want to use /usr/bin/env to invoke python, we can't pass the -u flag
@@ -82,7 +82,7 @@ def main():
             for each_reactant in reaction_dict['reactants']:
                 molecule_number, molecule_formula = each_reactant
                 reactant_formula_with_number.append(molecule_formula+\
-                                                    '('+str(molecule_number)+')')
+                                                    ' ('+str(molecule_number)+')')
             output_string += ' + '.join(reactant_formula_with_number)
 
             output_string += ' -> '
@@ -92,7 +92,7 @@ def main():
             for each_product in reaction_dict['products']:
                 molecule_number, molecule_formula = each_product
                 product_formula_with_number.append(molecule_formula+\
-                                                    '('+str(molecule_number)+')')
+                                                    ' ('+str(molecule_number)+')')
             output_string += ' + '.join(product_formula_with_number)
 
             grouped_rxn_f.write(output_string+"\n")

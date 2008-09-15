@@ -83,7 +83,7 @@ class Reactions_Wrapper:
 
             #Now parse reaction lines into dictionary and append to list.
             reactants_to_products_mapping.append(
-                parse_reaction_line(line)
+                self.parse_reaction_line(line)
             )
         
         return reactants_to_products_mapping
@@ -150,7 +150,7 @@ class Reactions_Wrapper:
             molecule_number = int(chemical_formula_number_match.group(2))
             return (molecule_number, molecule_formula)
        
-        print each_mol_with_num+' strangely did not match!'
+        print in_formula_with_number+' strangely did not match!'
         return False
 
 def tests():

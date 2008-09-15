@@ -1,0 +1,23 @@
+############################################################
+# Configuration file for Isolating Grouping Reactions from 
+# Group Reaction Analysis output.
+# To use: isolate_group_reactions [this_config_file]
+# (Need to run isolate_group_reactions in the same directory 
+# as config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+# $Id$
+############################################################
+
+#Filename of the grouped reactions input file. Currently set to 
+#this filename replacing the .control with .grprxns. 
+grprxns_file = os.path.splitext(control_file)[0]+'.grprxns'
+
+#Appended XYZ input file. For ReaxFF, this is usually the xmolout
+#file.
+appendedxyz_file = os.path.splitext(control_file)[0]+'.xmolout'
+
+#Appended XYZ output file format ([grouped_reaction_number] will
+#be replaced by a number):
+rxns_output_file = os.path.splitext(control_file)[0]+\
+                    '_[grouped_reaction_number].xmolout'
