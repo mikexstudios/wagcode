@@ -65,10 +65,6 @@ class Reactions_Wrapper:
         #Okay, now process all the reactions within this iteration. We
         #detect the end of this iteration by two consecutive new lines.
         newline_counter = 0
-        #The \w in regex means alphanumeric and _
-        chemical_formula_number_regex = re.compile(
-            r'^(\w+) \((\d+)\).*'
-        )
         #NOTE: This reactants_to_products_mapping data structure is different
         #      than the one used in reax_reactions.
         reactants_to_products_mapping = []
@@ -86,44 +82,54 @@ class Reactions_Wrapper:
             newline_counter = 0
 
             #Now parse reaction lines into dictionary and append to list.
-            split_by_arrow = line.split('->')
-            reactions_side = split_by_arrow[0]
-            products_side = split_by_arrow[1]
-
-            reaction_molecules_with_num = reactions_side.split('+')
-            product_molecules_with_num = products_side.split('+')
-
-            #Parse the molecule number next to molecule chemical formula:
-            reaction_molecules = []
-            for each_mol_with_num in reaction_molecules_with_num:
-                each_mol_with_num = each_mol_with_num.strip()
-                #Add to our list as a tuple:
-                parsed_molecule_formula_with_number = \
-                    self.parse_molecule_formula_with_number(each_mol_with_num)
-                if parsed_molecule_formula_with_number != False:
-                    reaction_molecules.append(
-                        parsed_molecule_formula_with_number
-                    )
-
-            #Do the same with product molecules. 
-            product_molecules = []
-            for each_mol_with_num in product_molecules_with_num:
-                each_mol_with_num = each_mol_with_num.strip()
-                #Add to our list as a tuple:
-                parsed_molecule_formula_with_number = \
-                    self.parse_molecule_formula_with_number(each_mol_with_num)
-                if parsed_molecule_formula_with_number != False:
-                    product_molecules.append(
-                        parsed_molecule_formula_with_number
-                    )
-
-            #Now place this parsed reaction in our mapping data structure:
             reactants_to_products_mapping.append(
-                {'reactants': reaction_molecules,
-                 'products': product_molecules}
+                parse_reaction_line(line)
             )
         
         return reactants_to_products_mapping
+
+    def parse_reaction_line(self, line):
+        '''
+        Given a reaction string, ie. H (1) + OH (2) -> H2O (3), will return a
+        dictionary of this reaction. The dictionary will have keys 'reactants'
+        and 'products'. The values are lists of tuples with first element
+        molecule number, the second element molecule formula.
+
+        Sample return:
+        {'reactants': [(1, 'H'), (2, 'OH')], 'products': [(3, 'H2O')]}
+        '''
+        split_by_arrow = line.split('->')
+        reactions_side = split_by_arrow[0]
+        products_side = split_by_arrow[1]
+
+        reaction_molecules_with_num = reactions_side.split('+')
+        product_molecules_with_num = products_side.split('+')
+
+        #Parse the molecule number next to molecule chemical formula:
+        reaction_molecules = []
+        for each_mol_with_num in reaction_molecules_with_num:
+            each_mol_with_num = each_mol_with_num.strip()
+            #Add to our list as a tuple:
+            parsed_molecule_formula_with_number = \
+                self.parse_molecule_formula_with_number(each_mol_with_num)
+            if parsed_molecule_formula_with_number != False:
+                reaction_molecules.append(
+                    parsed_molecule_formula_with_number
+                )
+
+        #Do the same with product molecules. 
+        product_molecules = []
+        for each_mol_with_num in product_molecules_with_num:
+            each_mol_with_num = each_mol_with_num.strip()
+            #Add to our list as a tuple:
+            parsed_molecule_formula_with_number = \
+                self.parse_molecule_formula_with_number(each_mol_with_num)
+            if parsed_molecule_formula_with_number != False:
+                product_molecules.append(
+                    parsed_molecule_formula_with_number
+                )
+        
+        return {'reactants': reaction_molecules, 'products': product_molecules}
 
     def parse_molecule_formula_with_number(self, in_formula_with_number):
         '''
@@ -157,6 +163,8 @@ def tests():
     assert reactions.parse_molecule_formula_with_number('H2O (1)') == \
             (1, 'H2O')
 
+    assert reactions.parse_reaction_line('H (1) + OH (2) -> H2O (3)') == {'reactants': [(1, 'H'), (2, 'OH')], 'products': [(3, 'H2O')]}
+    
     print 'All tests completed successfully!'
     sys.exit(0)
 

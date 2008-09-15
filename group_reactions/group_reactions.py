@@ -23,7 +23,7 @@ import os #For file exist check and splitext and path stuff
 #from reax.connection_table import Connection_Table
 #from reax.molecule_helper import Molecule_Helper
 from reactions_wrapper import Reactions_Wrapper
-import time
+#import time
 
 #Since we want to use /usr/bin/env to invoke python, we can't pass the -u flag
 #to the interpreter in order to get unbuffered output. Nor do we want to rely on
