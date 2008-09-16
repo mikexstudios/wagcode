@@ -30,10 +30,18 @@ class Grouped_Reactions_Wrapper:
     def __iter__(self):
         '''We want this to be iterable.'''
         return self
-   
+
     def load(self, input_file):
         self.f = file(input_file)
-
+        self.reset()
+    
+    def reset(self):
+        '''
+        Resets the iterator to the beginning. This is NOT a standard function
+        for an iterator. It's one I made up.
+        '''
+        self.f.seek(0)
+        
         #Discard the first two informative lines
         self.f.next()
         self.f.next()

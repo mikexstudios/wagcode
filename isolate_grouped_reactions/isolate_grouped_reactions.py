@@ -21,6 +21,7 @@ import os #For file exist check and splitext and path stuff
 #import re #For regex
 from XYZ import XYZ #XYZ class
 from grouped_reactions_wrapper import Grouped_Reactions_Wrapper
+from reax.molecule_helper import Molecule_Helper
 #import time
 
 #Since we want to use /usr/bin/env to invoke python, we can't pass the -u flag
@@ -56,13 +57,73 @@ def main():
     grouped_reactions.load(grprxns_file)
     print 'Grouped reaction file loaded: '+grprxns_file
 
+    molecule_helper = Molecule_Helper()
+    molecule_helper.load_molecule_list(molecules_file)
+   
     for each_grouped_reaction in grouped_reactions:
+        #Check if our argument is an integer. If so, then we'll just process
+        #only that grouped reaction number.
+        if type(isolate_grouped_reaction_number) == type(1):
+            if grouped_reactions.grouped_reaction_number != \
+               isolate_grouped_reaction_number:
+                continue #We'll skip these
+    
+        print 'Processing grouped reaction: '+str(grouped_reactions.grouped_reaction_number),
         molecule_numbers = get_all_unique_molecule_numbers(each_grouped_reaction)
         iterations = get_all_iterations(each_grouped_reaction)
-        print molecule_numbers
-        print iterations
-        exit()
+        
+        #We will find the range of iterations we need to operate over:
+        start_iteration = iterations[0]
+        end_iteration = iterations[-1]
+       
+        #Get all the atom numbers in the molecules involved in this reaction
+        #pathway.
+        atom_numbers = get_all_unique_atoms_for_molecule_numbers(
+                        molecule_helper, molecule_numbers
+                       )
+        atom_numbers = set(atom_numbers) #Make into set so we can do quick lookups
+        
+        #Now we go through all the iterations in the appended XYZ file (xmolout)
+        #and isolate these molecules. We do this by getting all the atoms in the
+        #molecules we want to isolate. Then simply keep those atoms and delete
+        #all other ones.
+        xmolout = XYZ()
+        xmolout.load(appendedxyz_file)
+       
+        new_xyz = XYZ() #We will use this to write our isolated XYZ structure.
 
+        for each_xyz in xmolout:
+            new_xyz.rows = []
+            #Compare each atom to our atom numbers.
+            for i, atom in enumerate(each_xyz):
+                each_xyz_atom_number = i+1 #Since atom numbers start at 1 not 0.
+                if each_xyz_atom_number in atom_numbers:
+                    new_xyz.rows.append(atom)
+            #Now append this new xyz to our output file:
+            output_xyz_filename = appendedxyz_output_file.replace(
+                                    '[grouped_reaction_number]',
+                                    str(grouped_reactions.grouped_reaction_number)
+                                  )
+            new_xyz.export(output_xyz_filename, append=True)
+            print '.',
+        print
+
+def get_all_unique_atoms_for_molecule_numbers(molecule_helper, molecule_numbers):
+    '''
+    Given the molecule_helper object and a list of molecule numbers, will return
+    a unique list of atoms in those molecules.
+
+    NOTE: We assume that molecule_helper has already been loaded with the
+          molecule list.
+    '''
+    unique_atoms = set([])
+    for each_molecule_number in molecule_numbers:
+        unique_atoms.update(
+            molecule_helper.get_atom_numbers_from_molecule(
+                molecule_helper.get_molecule_from_number(each_molecule_number)
+            )
+        )
+    return list(unique_atoms)
 
 def get_all_unique_molecule_numbers(grouped_reaction):
     '''

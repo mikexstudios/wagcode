@@ -235,8 +235,12 @@ class Molecule_Helper:
         have O(n^2) runtime. This all can be optimized by using dictionary and
         hashes, see p100 of vol 2 of my notebook.
         '''
+        sorted_molecule_numbers = sorted(molecule.keys())
         for i, each_molecule in enumerate(self.molecule_list):
-            if molecule == each_molecule:
+            #We want to see if the two molecules are the same. Therefore, we
+            #compare the molecule numbers. We sort them in case the keys aren't
+            #in the same order. NOTE: This slows things down a lot.
+            if sorted_molecule_numbers == sorted(each_molecule.keys()):
                 return i
         #Molecule was not found. So we'll add it:
         return self.give_molecule_a_number(molecule)
@@ -263,6 +267,20 @@ class Molecule_Helper:
         f = file(input_file, 'rb')
         self.molecule_list = pickle.load(f)
         f.close()
+
+    def get_molecule_from_number(self, molecule_number):
+        '''
+        Given a molecule number, will return the molecule.
+        '''
+        return self.molecule_list[molecule_number]
+
+    def get_atom_numbers_from_molecule(self, molecule):
+        '''
+        Returns all the atoms (in a list) that are in the given molecule.
+        '''
+        return molecule.keys()
+
+            
 
 def tests():
     #Currently assume some relative path stuff. This is apt to change once we
