@@ -13,6 +13,22 @@
 #then all of the grouped reactions will be processed):
 isolate_grouped_reaction_number = 4
 
+#Isolate method. There are two options:
+#'exact' - Isolates only the defined iterations (and their i+1 iteration,
+#          note there may be a potential for duplication in iterations)
+#          and the reaction for that iteration. This method is good for
+#          greatly reducing the number of atoms we look at. The downside
+#          is that it is very specific so it may be difficult to see the
+#          big picture.
+#'includeall' - Isolates the range of iterations (last iteration in grouped
+#               reaction - first iteration in grouped reaction) and not
+#               only the specifically defined ones. Also retains all
+#               molecules over *all* the iterations. This method is good
+#               for examining the whole picture while reducing non-iterac-
+#               ting atoms.
+#NOTE: Currently, only includeall is implemented.
+isolate_method = 'includeall'
+
 #Filename of the grouped reactions input file. Currently set to 
 #this filename replacing the .control with .grprxns. 
 grprxns_file = os.path.splitext(control_file)[0]+'.grprxns'

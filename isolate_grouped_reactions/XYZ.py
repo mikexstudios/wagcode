@@ -57,7 +57,7 @@ class XYZ:
         iteration_line = iteration_line[40:] #chop off first part
         iteration_line_split = iteration_line.split()
         #The first entry should be the iteration
-        self.iteration = iteration_line_split[0]
+        self.iteration = int(iteration_line_split[0])
         #NOTE: If we can't find the iteration part, no worries. Probably because
         #      the XYZ file we are using doesn't have it.
         
