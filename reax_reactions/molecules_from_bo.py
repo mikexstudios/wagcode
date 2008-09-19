@@ -45,7 +45,7 @@ except IOError:
 print 'Read control file successfully: '+control_file
 
 try:
-    bondorder_cutoff = sys.argv[2]
+    bondorder_cutoff = float(sys.argv[2])
     print 'Bond order cutoff specified at command line: '+str(bondorder_cutoff)
 except IndexError:
     pass #Do nothing. We'll use the bond order in the control file.

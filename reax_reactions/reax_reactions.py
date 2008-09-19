@@ -35,7 +35,7 @@ suppress_molecule_rearrangment = False
 try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
-    print 'Usage: reax_reactions [controlfile]'
+    print 'Usage: reax_reactions [controlfile] [optional: bond order]'
     print 'Since no control file specified, assuming the file is: control'
     control_file = 'control'
 
@@ -47,6 +47,11 @@ except IOError:
     sys.exit(1)
 print 'Read control file successfully: '+control_file
 
+try:
+    bondorder_cutoff = float(sys.argv[2])
+    print 'Bond order cutoff specified at command line: '+str(bondorder_cutoff)
+except IndexError:
+    pass #Do nothing. We'll use the bond order in the control file.
 
 def main():
     #Read in XYZ file. Store all the coordinates.
