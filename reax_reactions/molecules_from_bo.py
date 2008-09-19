@@ -68,18 +68,19 @@ def main():
     molecule_helper.connection_table_class = connection_table
     molecule_helper.bondorder_cutoff = bondorder_cutoff
     
-    #Go to first frame:
-    connection_table.next()
-
-    all_molecules = molecule_helper.get_all_molecules()
-    molecules_dict = molecule_helper.molecule_list_to_frequency_dict(all_molecules)
-    
     print
-    print 'List of molecules for the first frame in '+connection_table_file+\
-          ' for the bond order: '+str(bondorder_cutoff)
-    print '------------------------------------------------------'
-    for molecule_formula, molecule_freq in molecules_dict.iteritems():
-        print str(molecule_freq)+' x '+molecule_formula
+    print 'List of molecules for the bond order: '+str(bondorder_cutoff)
+    print
+    
+    for each_connection_table in connection_table:
+        all_molecules = molecule_helper.get_all_molecules()
+        molecules_dict = molecule_helper.molecule_list_to_frequency_dict(all_molecules)
+        
+        print 'Iteration: '+str(connection_table.iteration)
+        print '------------------------------------------------------'
+        for molecule_formula, molecule_freq in molecules_dict.iteritems():
+            print str(molecule_freq)+' x '+molecule_formula
+        print
 
 def tests():
     #Put any tests here:   
