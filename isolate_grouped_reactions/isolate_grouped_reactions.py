@@ -15,14 +15,9 @@ __copyright__ = 'General Public License (GPL)'
 
 import sys #For arguments and exit (in older python versions)
 import os #For file exist check and splitext and path stuff
-#import shutil
-#import time #For sleep
-#import math
-#import re #For regex
 from XYZ import XYZ #XYZ class
 from grouped_reactions_wrapper import Grouped_Reactions_Wrapper
 from reax.molecule_helper import Molecule_Helper
-#import time
 
 #Since we want to use /usr/bin/env to invoke python, we can't pass the -u flag
 #to the interpreter in order to get unbuffered output. Nor do we want to rely on
@@ -36,7 +31,8 @@ try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
     print 'Usage: group_reactions [controlfile]'
-    sys.exit(0)
+	print 'Since no control file specified, assuming the file is: control'
+	control_file = 'control'
 
 #Source the control file:
 try:

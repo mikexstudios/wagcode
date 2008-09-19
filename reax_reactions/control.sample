@@ -1,0 +1,40 @@
+############################################################
+# Configuration file for ReaxFF Reactions Analysis
+# To use: reax_reactions [this_config_file]
+# (Need to run reax_reactions in the same directory as
+#  config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+# $Id$
+############################################################
+
+#Filename of the ReaxFF output structure (in XYZ format). Currently set to this
+#filename replacing the .control with .xyz. The reason why we need this file is
+#because ReaxFF's connection table does not specify atom type.
+structure_file = os.path.splitext(control_file)[0]+'.xyz'
+
+#Connection table (default is fort.7 in ReaxFF output):
+connection_table_file = 'fort_full.7'
+
+#Reactions output file (current set to this filename replacing the .control with
+#.xyz):
+rxns_output_file = os.path.splitext(control_file)[0]+'.rxns'
+
+#Molecules output file (this is not meant to be user readable since the file is
+#in binary format). Contains all the molecules that were used to create the rxns
+#output file. This file keeps track of the molecule number to molecule mapping
+#so that we can perform subsequent analysis on the rxns output file without
+#restarting the whole analysis process.
+molecules_output_file = os.path.splitext(control_file)[0]+'.mols'
+
+#Bond cutoff. This is the lowest value in which we will consider the bond being
+#a "real" bond. Any BO below this will be disregarded. The cutoff is useful in
+#excluding hydrogen bonds from being processed when determining what the
+#"molecule" is for a given atom.
+bondorder_cutoff = 0.65
+
+#Suppress molecule rearrangement. If set to True, reactions that involve atoms
+#rearranging inside of the molecule will not be output. An example of atom
+#rearraging is: HO20Ti10 -> HO20Ti10. It's the same molecule, there is either a
+#bond breaking or bond forming, but it's all contained in the molecule.
+suppress_molecule_rearrangment = True
