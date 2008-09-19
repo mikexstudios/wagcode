@@ -31,8 +31,8 @@ try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
     print 'Usage: group_reactions [controlfile]'
-	print 'Since no control file specified, assuming the file is: control'
-	control_file = 'control'
+    print 'Since no control file specified, assuming the file is: control'
+    control_file = 'control'
 
 #Source the control file:
 try:
