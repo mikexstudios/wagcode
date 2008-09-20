@@ -23,17 +23,8 @@ directory. Cool features include:
 
 USAGE: mkreaxsub [pbs_name]
 
-CHANGELOG:
-0.2.4 (7 July 2008) - Added some more information reporting in the info.pbs
-                      file (Cluster, better output for Hostname).
-0.2.3 (23 March 2008) - Fixed problem in cp(from|to)node files where the second
-                        rsh command needs to be wrapped in quotes.
-0.2.2 (14 March 2008) - Fixed problem in cp(from|to)node files where '*' wasn't
-                        interpreted correctly.
-0.2.1 (08 March 2008) - Fixed bug in nodesh generation.
+$Id:$
 '''
-__version__ = '0.2.3'
-__date__ = '23 March 2008'
 __author__ = 'Michael Huynh (mikeh@caltech.edu)'
 __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
@@ -77,15 +68,19 @@ echo "Temp Directory: [pbstempdir]" >> info.pbs
 temp_dir=/temp1/${USER}/[pbstempdir]
 
 #Generate some small scripts for copying files to and from the node.
+#And also removing the simulation from the node...
 env | grep hive
 echo "rsh ${cluster_name} \\"rsh ${node_name} cd ${temp_dir}\;"'$1"' > nodesh
-echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"cp ${curr_dir}/"'$1'" ${temp_dir}/\\\\\\"\\"" > cptonode
+echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"cp -r ${curr_dir}/"'$1'" ${temp_dir}/\\\\\\"\\"" > cptonode
 echo "echo \$CMD; \$CMD" >> cptonode
-echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"cp ${temp_dir}/"'$1'" ${curr_dir}/\\\\\\"\\"" > cpfromnode
+echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"cp -r ${temp_dir}/"'$1'" ${curr_dir}/\\\\\\"\\"" > cpfromnode
+echo "echo \$CMD; \$CMD" >> cpfromnode
+echo "CMD=\\"rsh ${cluster_name} rsh ${node_name} \\\\\\"rm -rf ${temp_dir}/\\\\\\"\\"" > removefromnode
 echo "echo \$CMD; \$CMD" >> cpfromnode
 chmod 755 nodesh
 chmod 755 cptonode
 chmod 755 cpfromnode
+chmod 755 removefromnode
 
 #Copy files to the node. To combat issues with the same pbsname, we
 #append a short hash to the directory name (generated in the python script).
