@@ -16,7 +16,7 @@ __copyright__ = 'General Public License (GPL)'
 
 import sys #For arguments and exit (in older python versions)
 import os #For file exist check and splitext and path stuff
-#import re
+import re
 import time #for sleep
 from molfra_wrapper import Molfra_Wrapper
 
@@ -29,6 +29,7 @@ sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #Arguments. Set some defaults before the control file in case the user does not
 #define them.
 exclude_molecules = []
+combine_molecules = []
 try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
@@ -75,6 +76,22 @@ def main():
             print 'Did not exclude since not found: '+each_exclude
     all_molecule_formulas = list(all_molecule_formulas_set)
 
+    #Combine any of our molecules here:
+    for each_combine in combine_molecules:
+        each_combine_label, each_combine_regex, each_combine_func = each_combine
+        each_combine_regex = re.compile(each_combine_regex)
+        print 'Trying to combine molecules similar to: '+each_combine_label
+
+        new_all_molecule_formulas = set([])
+        for each_formula in all_molecule_formulas:
+            each_combine_match = each_combine_regex.match(each_formula)
+            if each_combine_match:
+                print 'Combined '+each_formula+' with '+each_combine_label
+                new_all_molecule_formulas.add(each_combine_label)
+            else:
+                new_all_molecule_formulas.add(each_formula)
+        all_molecule_formulas = list(new_all_molecule_formulas)
+
     #SECOND PASS: Populate with the rows:
     iteration_nummol_moldict = []
     for each_mol_dict in molfra:
@@ -82,9 +99,27 @@ def main():
         
         #Match the keys from the molecules we get back:
         for molecule_formula, molecule_freq in each_mol_dict.iteritems():
+            #See if this molecule is part of our combined molecule
+            #specifications:
+            for each_combine in combine_molecules:
+                each_combine_label, each_combine_regex, each_combine_func = each_combine
+                each_combine_regex = re.compile(each_combine_regex)
+                each_combine_match = each_combine_regex.match(molecule_formula)
+                if each_combine_match:
+                    #Execute any function assiciated with this combine
+                    #specification:
+                    if each_combine_func != None:
+                        each_combine_func += '(molecule_formula, molecule_freq)'
+                        molecule_formula, molecule_freq = \
+                                eval(each_combine_func)
+                    else:
+                        molecule_formula = each_combine_label
+
             try:
                 all_mols_dict[molecule_formula] #This one is to check if key exists
-                all_mols_dict[molecule_formula] = molecule_freq
+                #It's important to += instead of = since we could have combined
+                #molecules here:
+                all_mols_dict[molecule_formula] += molecule_freq
             except KeyError:
                 #We can't find this key, probably because we excluded this
                 #molecule. Therefore, do nothing.
@@ -111,7 +146,7 @@ def main():
     #Now write each row:
     for each_entry in iteration_nummol_moldict:
         iteration, num_mol, mol_dict = each_entry
-        
+       
         #For molfra.tsv:
         mol_dict_values = map(str, mol_dict.values()) #Assume it returns values in correct order
         #Perhaps some thing we can improve here is to have all zero values
@@ -120,6 +155,11 @@ def main():
 
         #For num_mol.tsv:
         fnummol.write(str(iteration)+"\t"+str(num_mol)+"\n")
+    #We need to update all_molecule_formulas to match the same order that the
+    #values were printed out in molfra.tsv. So we'll just simply re-update it
+    #from mol_dict:
+    all_molecule_formulas = mol_dict.keys()
+
     fmolfra.close()   
     fnummol.close()
     print 'Total number of molecules analysis generated in '+num_mol_tsv_file

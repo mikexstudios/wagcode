@@ -28,6 +28,33 @@ num_mol_gplot_file = 'nummol.gplot'
 #values:
 exclude_molecules = ['H2O'] 
 
+#Molecules to combine together. This is useful when we have molecules
+#adsorbing on surfaces and we want to group all those labels together.
+#The format is a list of tuples. Each tuple entry is:
+#('label to be shown', r'regex expression for grouping molecules', None or 'function to call')
+#If a 'function_to_call' is specified, define it in this control file.
+#That function much accept molecule_formula and molecule_freq. It
+#should return also molecule_formula and molecule_freq. The point of
+#'function_to_call' is the ability to override either molecule_formula
+#or molecule_freq depending on the inputs.
+combine_molecules = [
+    ('H(x)OyTiz', r'(H\d*)?O\d+Ti\d+', 'HxOyTiz_freq'),
+]
+def HxOyTiz_freq(molecule_formula, molecule_freq):
+    regex = re.compile(r'(H\d*)?(O\d+)Ti\d+')
+    match = regex.match(molecule_formula)
+    if match:
+        #Check for H:
+        if match.group(1) != None:
+            Hstring = match.group(1)
+            num_H = Hstring[1:]
+            if num_H == '':
+                num_H = 1
+            num_H = int(num_H)
+            molecule_freq = num_H
+        molecule_formula = 'H(x)OyTiz'
+    return molecule_formula, molecule_freq
+
 #Use line smoothing for GNUplot generation? (True/False)
 smooth_lines = True
 
