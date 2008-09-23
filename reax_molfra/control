@@ -41,6 +41,11 @@ combine_molecules = [
     ('H(x)OyTiz', r'(H\d*)?O\d+Ti\d+', 'HxOyTiz_freq'),
 ]
 def HxOyTiz_freq(molecule_formula, molecule_freq):
+    '''
+    Returns the molecule_formula and the number of
+    hydrogens in the molecule_formula. Useful for
+    giving a sense how what's adsorbed on surface.
+    '''
     regex = re.compile(r'(H\d*)?(O\d+)Ti\d+')
     match = regex.match(molecule_formula)
     if match:
