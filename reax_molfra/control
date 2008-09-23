@@ -1,0 +1,47 @@
+############################################################
+# Configuration file for Molecule Fragment Analysis from
+# ReaxFF (molfra.out) file.
+# To use: reax_molfra [this_config_file]
+# (Need to run group_reactions in the same directory as
+#  config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+# $Id$
+############################################################
+
+#Filename of the molecule fragments file (usually molfra.out).
+molfra_file = 'molfra.out'
+
+#Filename of output (# molecule fragment vs iteration) tab
+#separated values (.tsv) file. The gplot file is for a pre-made
+#GNUPlot script file that can generate the graph for you:
+molfra_tsv_file = 'molfra.tsv'
+molfra_gplot_file = 'molfra.gplot'
+
+#Filename of output (# total molecules vs iteration) tsv file:
+num_mol_tsv_file = 'nummol.tsv'
+num_mol_gplot_file = 'nummol.gplot'
+
+#Molecules to exclude from the output tsv files. (For instance,
+#I would use this to exclude solvent molecules or other molecules
+#that would drown out other molecules.) This is a list of string
+#values:
+exclude_molecules = ['H2O'] 
+
+#Use line smoothing for GNUplot generation? (True/False)
+smooth_lines = True
+
+#Large PNG output file? (True/False)
+large_output = False
+
+#Automatically Generate Graphs? (True/False)
+#(If True, then this script will invoke gnuplot to generate the
+# graphs.)
+generate_graphs = True
+
+#View the graphs immediately? (True, False)
+#(If True, then this script will invoke the display program to 
+# view the PNG generated graphs. This assumes that 
+# generate_graphs = True.)
+view_immediately = True
+display_program = 'gqview'
