@@ -43,4 +43,4 @@ molecules_file = 'mols.out'
 
 #Appended XYZ output file format ([grouped_reaction_number] will
 #be replaced by a number):
-appendedxyz_output_file = 'grprxn_[grouped_reaction_number].xmolout'
+appendedxyz_output_file = 'grprxn_[grouped_reaction_number].xyz'
