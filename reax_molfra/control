@@ -60,8 +60,17 @@ def HxOyTiz_freq(molecule_formula, molecule_freq):
         molecule_formula = 'H(x)OyTiz'
     return molecule_formula, molecule_freq
 
+#GNUPlot Version 4? (True/False)
+gnuplot_4 = True
+
 #Use line smoothing for GNUplot generation? (True/False)
 smooth_lines = True
+#Include points with line smoothing? (True/False)
+smooth_lines_points = False 
+
+#Thicker lines? (True/False)
+#(NOTE: Currently doesn't work since gnuplot can't change line widths for png output.)
+thicker_lines = False
 
 #Large PNG output file? (True/False)
 large_output = False

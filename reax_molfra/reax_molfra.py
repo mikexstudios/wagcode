@@ -193,15 +193,31 @@ set key outside below
         fgplot.write("set data style linespoints\n")
     if large_output == True:
         fgplot.write("set pointsize 2\n")
+
+    #Thicker linewidths:
+    if thicker_lines:
+        for i, each_molname in enumerate(all_molecule_formulas):
+            if gnuplot_4:
+                fgplot.write('set style line 1 lt 1 lw 3'+"\n")
+            else:
+                fgplot.write('set linestyle 1 lt 1 lw 3'+"\n")
+
+
     fgplot.write('plot ')
     for i, each_molname in enumerate(all_molecule_formulas):
         if smooth_lines == True:
-            fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" smooth bezier title \""+each_molname+"\"")
+            if smooth_lines_points:
+                #See http://t16web.lanl.gov/Kawano/gnuplot/plot2-e.html
+                #notitle with points
+                fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" notitle with points, \\\n")
+                fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" smooth csplines title \""+each_molname+"\"")
+            else:
+                fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" smooth bezier title \""+each_molname+"\"")
         else:
             fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" title \""+each_molname+"\"")
         #Takes care of the last plot element (remove trailing ,)
         if(i != len(all_molecule_formulas)-1):
-            fgplot.write(", ") 
+            fgplot.write(", \\\n") 
     fgplot.write("\n")
     if large_output == True:
         fgplot.write("set size 1.6,1.6\n") #1024x768 resolution
