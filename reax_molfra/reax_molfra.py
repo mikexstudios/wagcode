@@ -197,10 +197,11 @@ set key outside below
     #Thicker linewidths:
     if thicker_lines:
         for i, each_molname in enumerate(all_molecule_formulas):
+            i += 1 #Since gnuplot can't accept a style of 0
             if gnuplot_4:
-                fgplot.write('set style line 1 lt 1 lw 3'+"\n")
+                fgplot.write('set style line '+str(i)+' lt '+str(i)+' lw 4'+"\n")
             else:
-                fgplot.write('set linestyle 1 lt 1 lw 3'+"\n")
+                fgplot.write('set linestyle '+str(i)+' lt '+str(i)+' lw 4'+"\n")
 
 
     fgplot.write('plot ')
@@ -212,7 +213,10 @@ set key outside below
                 fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" notitle with points, \\\n")
                 fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" smooth csplines title \""+each_molname+"\"")
             else:
-                fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" smooth bezier title \""+each_molname+"\"")
+                if thicker_lines == True:
+                    fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" smooth bezier title \""+each_molname+"\" ls "+str(i+1))
+                else:
+                    fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" smooth bezier title \""+each_molname+"\"")
         else:
             fgplot.write("'"+molfra_tsv_file+"' u 1:"+str(i+2)+" title \""+each_molname+"\"")
         #Takes care of the last plot element (remove trailing ,)
@@ -225,7 +229,18 @@ set key outside below
     else:
         fgplot.write("set term png\n")
     fgplot.write("set output \"molfra.png\"\n")
-    fgplot.write("replot")
+    fgplot.write("replot\n")
+
+    #For EPS output (allows us to control sizes and line thickness better)
+    fgplot.write("set terminal postscript eps enhanced color\n")
+    if large_output == True:
+        fgplot.write("set size 0.8,0.8\n")
+    #TODO: Make this key box thing an option
+    fgplot.write("set key box\n")
+    fgplot.write("set key top right\n")
+    fgplot.write("set output \"molfra.eps\"\n")
+    fgplot.write("replot\n")
+    
     fgplot.close()
     print "Gnuplot file written: "+molfra_gplot_file
 
@@ -241,13 +256,30 @@ set data style linespoints
 ''')
     if large_output:
         fgplot.write("set pointsize 2\n")
-    fgplot.write("plot \""+num_mol_tsv_file+"\" u 1:2")
-    fgplot.write("\n")
+    if smooth_lines == True:
+        if thicker_lines == True:
+            if gnuplot_4:
+                fgplot.write('set style line 1 lt 1 lw 4'+"\n")
+            else:
+                fgplot.write("set linestyle 1 lt 1 lw 4\n")
+            fgplot.write("plot \""+num_mol_tsv_file+"\" u 1:2 smooth bezier ls 1\n")
+        else:
+            fgplot.write("plot \""+num_mol_tsv_file+"\" u 1:2 smooth bezier\n")
+    else:
+        fgplot.write("plot \""+num_mol_tsv_file+"\" u 1:2\n")
     if large_output:
         fgplot.write("set size 1.6,1.6\n") #1024x768 resolution
     fgplot.write("set term png\n")
     fgplot.write("set output \"nummol.png\"\n")
-    fgplot.write("replot")
+    fgplot.write("replot\n")
+    
+    #For EPS output (allows us to control sizes and line thickness better)
+    fgplot.write("set terminal postscript eps enhanced color\n")
+    if large_output == True:
+        fgplot.write("set size 0.8,0.8\n")
+    fgplot.write("set output \"nummol.eps\"\n")
+    fgplot.write("replot\n")
+    
     fgplot.close()
     print "Gnuplot file written: "+num_mol_gplot_file+"\n"
 

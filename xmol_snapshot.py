@@ -50,9 +50,21 @@ def main():
     xmolout_second_line = xmolout_f.readline()
     xmolout_f.close()
     #Extract unique id part:
-    unique_id_regex = re.match(r'^\s*(.+?)\s+\d+\s+.+', xmolout_second_line)
+    unique_id_regex = re.match(r'^(.+?)\s+\d+\s+.+', xmolout_second_line)
     if unique_id_regex:
         unique_id = unique_id_regex.group(1).strip()
+
+        #If no "name" for the molecule was set, let's match the number of
+        #whitespace as the unique id.
+        #NOTE: Doesn't work yet.
+        if unique_id == '':
+            #unique_whitespace_regex= re.match(r'^(\s+)\d+\s+.+', xmolout_second_line)
+            #unique_id = unique_whitespace_regex.group(1)
+            #TODO: Make this less of a hack:
+            unique_id = '                                              '
+            
+       
+       #print 'Unique id: '+unique_id
     else:
         print 'ERROR: Unique id could not be extracted from the second line of '+\
                 'the '+xmol_file+'. Check the regex.'
@@ -109,7 +121,7 @@ def main():
     xmol_slice_cmd = os.popen('head -n '+str(end_line)+' '+xmol_file+ \
         ' | tail -n '+str(iteration_line_interval))
     for line in xmol_slice_cmd:
-        print line
+        print line,
     xmol_slice_cmd.close()
 
 
