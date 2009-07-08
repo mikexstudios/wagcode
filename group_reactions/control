@@ -1,0 +1,17 @@
+############################################################
+# Configuration file for Grouping Reactions from ReaxFF
+# Reaction Analysis output.
+# To use: group_reactions [this_config_file]
+# (Need to run group_reactions in the same directory as
+#  config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+# $Id$
+############################################################
+
+#Filename of the reactions output file. Currently set to this filename
+#replacing the .control with .rxns. 
+rxns_file = 'rxns.out'
+
+#Grouped reactions output file
+rxns_output_file = 'grprxns.out'

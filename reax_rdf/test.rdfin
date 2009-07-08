@@ -1,0 +1,42 @@
+############################################################
+# Configuration file for RDF Calculator (for ReaxFF)
+# To use: reax_rdf [this_config_file]
+# (Need to run reax_rdf in the same directory as
+#  config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+############################################################
+
+#Filename of the ReaxFF output structure (in BGF format). Currently set to
+#this filename replacing the .rdfin with .xyz
+structure_file = os.path.splitext(control_file)[0]+'.xyz'
+
+#Output tab separated value file (current set to this filename replacing
+#the .rdfin with .xyz):
+output_file = os.path.splitext(control_file)[0]+'.tsv'
+
+#If set, GNUPlot input file generation (use gnuplot [file].gplot to 
+#create the graphs):
+gnuplot_file = os.path.splitext(control_file)[0]+'.gplot'
+
+#Connection table (default is fort.7 in ReaxFF output):
+connection_table_file = 'fort.7'
+
+#The atom which we are measuring from:
+from_atom = 'O'
+#The atom which we are measuring to:
+to_atom = 'H'
+#Exclude to_atom if it is connected to:
+#NOTE: to_atoms that are attached to the same molecule as the from_atom are
+#      automatically excluded
+exclude_to_atom_if_connected_to = ''
+
+#Unit cell dimensions. (x, y, z) in angstroms. Set to False if no periodic
+#boundary conditions are used.
+unit_cell = (19.45, 17.75, 14.31740)
+
+#Bin size defines the range of r distances that will be grouped into 
+#one histogram bin. The larger this number, the magnitude of each 
+#bin will be larger. If this number is too small, then the magnitude 
+#of each bin will approach 1 and even 0!
+bin_size = 0.10 #Angstroms

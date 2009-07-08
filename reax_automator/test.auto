@@ -1,0 +1,75 @@
+############################################################
+# Configuration file for ReaxFF Automator
+# To use: reax_automator [this_config_file]
+# (Need to run reax_automator in the same directory as
+#  config file.)
+# Note: This file will be sourced into a python script so
+#       make sure you have correct syntax here.
+############################################################
+
+#Filename of the initial structure (in BGF format). Currently set to
+#this filename replacing the .auto with .bgf
+initial_structure = os.path.splitext(os.path.basename(control_file_path))[0]+'.bgf'
+
+#################################################################################
+#Now we define each of our simulations which will occur in the order in which
+#they are defined (ie. simulation[0] will occur first, then simulation[1], etc.).
+#Things you can use inside of strings (you can define your own below):
+# [base_name] - is the initial_structure string minus the end extension
+string_substitutions['[base_name]'] = os.path.splitext(initial_structure)[0]
+#################################################################################
+
+#Path to folder containing files for this simulation.
+simulation[0]['simulation_folder'] = 'templates/em'
+#Output folder. Defaults to the name of initial structure without file extension.
+simulation[0]['output_folder'] = '[base_name]'
+#Final structure name (optional). Creates a name for the final fort.90 file. Naming
+#the final structure is a good way of allowing structures to be easily identifiable.
+simulation[0]['final_structure_name'] = '[base_name]_em.bgf'
+#The finishing function will be run after the simulation has completed. It can be
+#used for compiling results, further manipulation of files, etc. The string will
+#be eval()'ed.
+simulation[0]['finishing_function'] = 'output_final_em_energy()'
+#Removes unnecessary files from simulation (ie. xmolout) and archives with gzip.
+#Set to True if you want to keep xmolout. Set to 'full' if you want to remove 
+#xmolout. Dependencies: reaxreduce
+simulation[0]['reax_reduce'] = 'full'
+
+simulation[1]['simulation_folder'] = 'templates/anneal'
+simulation[1]['output_folder'] = 'anneal'
+#Replacements is a dictionary where the keys are the filename, values
+#are an array of search, replace tuples. If the replacement string starts
+#with eval: then whatever after that will be passed through eval() function
+#in python.
+simulation[1]['replacements'] = {
+        'tregime.in': [('[total_atoms]', "eval:get_total_atoms('geo')")]
+    }
+simulation[1]['final_structure_name'] = '[base_name]_anneal.bgf'
+simulation[1]['finishing_function'] = 'output_final_em_energy()'
+simulation[1]['reax_reduce'] = 'full'
+
+simulation[2]['simulation_folder'] = 'templates/em'
+simulation[2]['output_folder'] = 'em'
+simulation[2]['final_structure_name'] = '[base_name]_anneal_em.bgf'
+simulation[2]['link_final_structure_to'] = 'final_structures'
+simulation[2]['finishing_function'] = 'output_final_em_energy()'
+simulation[2]['reax_reduce'] = 'full'
+
+#End of simulations
+
+#Begin helper functions
+
+def output_final_em_energy():
+	f = file('fort.90')
+	#Better to use a reverse iterator since we know that the ENERGY line is
+	#at the bottom of the file, but oh well.
+	energy_regex = re.compile(r'^ENERGY\s+([-0-9.]+)\s*')
+	for line in f:
+		energy_match = energy_regex.match(line)
+		if energy_match:
+			print 'Energy of final structure: '+energy_match.group(1)
+			return
+
+
+
+#End helper functions
