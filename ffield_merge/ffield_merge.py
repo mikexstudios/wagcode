@@ -40,6 +40,25 @@ def main():
     to_torsion_dict = torsion_section_to_dict(to_sections['torsion'])
     to_hbond_dict = hbond_section_to_dict(to_sections['hbond'])
 
+    #Get the equivalent numbers of our move_atoms.
+    from_move_atoms_num = []
+    to_move_atoms_num = []
+    for atom_label in move_atoms:
+        from_move_atoms_num.append(atom_num_lookup(from_sections['atom'],
+                                                   atom_label))
+        to_move_atoms_num.append(atom_num_lookup(to_sections['atom'],
+                                                 atom_label))
+    from_move_atoms_num = tuple(from_move_atoms_num)
+    to_move_atoms_num = tuple(to_move_atoms_num)
+    print from_move_atoms_num
+    print to_move_atoms_num
+
+    #Now create merged sections. Merge does the following:
+    #1. Move over any entries that 'from' has, that 'to' doesn't have.
+    #2. If additional move atoms are specified, those are also moved from 'from'
+    #   to 'to' despite the conflict. The 'from' version will overwrite the 'to'
+    #   version.
+    #merged_atom_dict = merge_atom_dict(from_atom_dict, to_atom_dict, move_atoms)
 
     ##Parse text into dict-line
     #base_dict = text_to_dict(base_text.splitlines())
@@ -185,6 +204,40 @@ def parse_sections(f):
     #print sections['hbond'][0]
 
     return sections
+
+def atom_num_lookup(lines, atom_label):
+    '''
+    Given an array of lines for the atom section and an atom label (ie. 'C',
+    'H', etc.), returns the atom number associated with that label.
+
+    @param lines Array of strings that comprise the lines of the atom section.
+    @param atom_label String for atom label (ie. 'C', 'H', etc.).
+    @return int Integer associated with that atom label.
+    '''
+    atoms = []
+    
+    #Sample starting line:
+    # C    1.3817   4.0000  12.0000   1.8903   0.1838   0.9000   1.1341   4.0000     
+    #First, get a list of all the atom labels in the order that they appear.
+    start_regex = re.compile(r'^\s*([A-Za-z]+)\s+.+')
+    for line in lines:
+        m = start_regex.match(line)
+        if m: #check if there is a match
+            atoms.append(m.group(1))
+
+    #Now see which index matches:
+    try:
+        match_index = atoms.index(atom_label)
+    except ValueError:
+        #Means that the atom_label was not found in our atoms array
+        print 'ERROR: '+atom_label+' could not be found!'
+        raise ValueError
+    
+    #We note that the atoms start counting at 1 (not 0 - which is reserved as a
+    #wildcard atom in torsions)
+    return match_index + 1
+    
+
 
 def atom_section_to_dict(lines):
     '''
