@@ -44,6 +44,11 @@ def main():
     print len(angle_dict)
     #print angle_dict['1|1|1']
     #print angle_dict['2|1|11']
+    torsion_dict = torsion_section_to_dict(sections['torsion'])
+    #print torsion_dict
+    print len(torsion_dict)
+    #print torsion_dict['1|1|1|1']
+    #print torsion_dict['0|11|11|0']
 
 
     ##Parse text into dict-line
@@ -349,6 +354,50 @@ def angle_section_to_dict(lines):
         angle_dict[key] = line
 
     return angle_dict
+
+def torsion_section_to_dict(lines):
+    '''
+    Given an array of lines for the torsion section, parses the lines into a
+    dictionary where each key is a representation of the torsion where the
+    left-most number is always smaller than the right-most number (ie.
+    '1|5|3|2', '3|4|8|5', '4|19|2|15', etc.), and the value is the line
+    associated with each torsion term.
+
+    @param lines Array of strings that comprise the lines of the torsion section.
+    @return dict Dictionary, each key is torsion representation; each value
+                 is a string that contains the associated line of that torsion.
+    '''
+    torsion_dict = {}
+    
+    #Sample line:
+    #  1  1  1  1  -0.2500  34.7453   0.0288  -6.3507  -1.6000   0.0000   0.0000     
+    for line in lines:
+        #The line begins with four numbers denoting the atoms involved in
+        #torsion:
+        s = line.split()
+        assert len(s) == 11 #sanity check
+        atom1 = int(s[0])
+        atom2 = int(s[1])
+        atom3 = int(s[2])
+        atom4 = int(s[3])
+
+        #Now we want to make the key label. We know that an torsion representation
+        #like:  1 2 3 4 is equivalent to 4 3 2 1. Essentially, the order
+        #matters, but the sequence can be flipped/reversed. Therefore, for
+        #consistency in comparison, we always write the smaller atom number of
+        #the two ends on the left end. For example, 6 1 4 3 would be written as
+        #'3|4|1|6'.
+        if atom1 <= atom4:
+            key = str(atom1)+'|'+str(atom2)+'|'+str(atom3)+'|'+str(atom4)
+        else:
+            key = str(atom4)+'|'+str(atom3)+'|'+str(atom2)+'|'+str(atom1)
+
+        #Put in dictionary
+        if key in torsion_dict:
+            print 'ERROR (torsion): '+key+' already exists!'
+        torsion_dict[key] = line
+
+    return torsion_dict
 
 def text_to_dict(text):
     dict = {}
