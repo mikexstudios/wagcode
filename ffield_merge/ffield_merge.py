@@ -22,33 +22,23 @@ move_atoms = ('C', 'H', 'O', 'N', 'S')
 
 def main():
     #Parse file into each section
-    #from_f = file(from_ffield)
-    #from_sections = parse_sections(from_f)
-
+    from_f = file(from_ffield)
+    from_sections = parse_sections(from_f)
+    from_atom_dict = atom_section_to_dict(from_sections['atom'])
+    from_bond_dict = bond_section_to_dict(from_sections['bond'])
+    from_offdiag_dict = offdiag_section_to_dict(from_sections['offdiag'])
+    from_angle_dict = angle_section_to_dict(from_sections['angle'])
+    from_torsion_dict = torsion_section_to_dict(from_sections['torsion'])
+    from_hbond_dict = hbond_section_to_dict(from_sections['hbond'])
+    
     to_f = file(to_ffield)
-    sections = parse_sections(to_f)
-    atom_dict = atom_section_to_dict(sections['atom'])
-    #print atom_dict
-    bond_dict = bond_section_to_dict(sections['bond'])
-    print len(bond_dict)
-    #print bond_dict
-    #print bond_dict['1|1']
-    #print bond_dict['11|11']
-    offdiag_dict = offdiag_section_to_dict(sections['offdiag'])
-    print len(offdiag_dict)
-    #print offdiag_dict
-    #print offdiag_dict['1|2']
-    #print offdiag_dict['2|11']
-    angle_dict = angle_section_to_dict(sections['angle'])
-    #print angle_dict
-    print len(angle_dict)
-    #print angle_dict['1|1|1']
-    #print angle_dict['2|1|11']
-    torsion_dict = torsion_section_to_dict(sections['torsion'])
-    #print torsion_dict
-    print len(torsion_dict)
-    #print torsion_dict['1|1|1|1']
-    #print torsion_dict['0|11|11|0']
+    to_sections = parse_sections(to_f)
+    to_atom_dict = atom_section_to_dict(to_sections['atom'])
+    to_bond_dict = bond_section_to_dict(to_sections['bond'])
+    to_offdiag_dict = offdiag_section_to_dict(to_sections['offdiag'])
+    to_angle_dict = angle_section_to_dict(to_sections['angle'])
+    to_torsion_dict = torsion_section_to_dict(to_sections['torsion'])
+    to_hbond_dict = hbond_section_to_dict(to_sections['hbond'])
 
 
     ##Parse text into dict-line
@@ -137,7 +127,7 @@ def parse_sections(f):
     torsion_regex = re.compile(r'! Nr of torsions')
     #For hydrogen bonds:
     #9    ! Nr of hydrogen bonds;at1;at2;at3;Rhb;Dehb;vhb1                         
-    hydrogen_regex = re.compile(r'! Nr of hydrogen bonds')
+    hbond_regex = re.compile(r'! Nr of hydrogen bonds')
 
     #Determine what lines each of these start
     general_start = 2
@@ -153,15 +143,15 @@ def parse_sections(f):
             angle_start = i+1 #line num = iter + 1
         elif torsion_regex.search(line):
             torsion_start = i+1 #line num = iter + 1
-        elif hydrogen_regex.search(line):
-            hydrogen_start = i+1 #line num = iter + 1
+        elif hbond_regex.search(line):
+            hbond_start = i+1 #line num = iter + 1
 
     #print atom_start
     #print bond_start
     #print offdiag_start
     #print angle_start
     #print torsion_start
-    #print hydrogen_start
+    #print hbond_start
 
     #General section: Anything between general_start and atom_start.
     sections['general'] = get_lines(f, general_start+1, atom_start-1)
@@ -187,12 +177,12 @@ def parse_sections(f):
     #print sections['angle'][0]
     
     #Torsion section: 
-    sections['torsion'] = get_lines(f, torsion_start+1, hydrogen_start-1)
+    sections['torsion'] = get_lines(f, torsion_start+1, hbond_start-1)
     #print sections['torsion'][0]
     
     #Hydrogen Bond section: 
-    sections['hydrogen'] = get_lines(f, hydrogen_start+1, None) #To end of file
-    #print sections['hydrogen'][0]
+    sections['hbond'] = get_lines(f, hbond_start+1, None) #To end of file
+    #print sections['hbond'][0]
 
     return sections
 
@@ -398,6 +388,41 @@ def torsion_section_to_dict(lines):
         torsion_dict[key] = line
 
     return torsion_dict
+
+def hbond_section_to_dict(lines):
+    '''
+    Given an array of lines for the hbond section, parses the lines into a
+    dictionary where each key is a representation of the hbond (order of the
+    atom numbers matter), and the value is the line associated with each hbond
+    term.
+
+    @param lines Array of strings that comprise the lines of the hbond section.
+    @return dict Dictionary, each key is hbond representation; each value
+                 is a string that contains the associated line of that hbond.
+    '''
+    hbond_dict = {}
+    
+    #Sample line:
+    #  3  2  3   2.1200  -3.5800   1.4500  19.5000                                   
+    for line in lines:
+        #The line begins with three numbers denoting the atoms involved in
+        #angle:
+        s = line.split()
+        assert len(s) == 7 #sanity check
+        atom1 = int(s[0])
+        atom2 = int(s[1])
+        atom3 = int(s[2])
+
+        #Now we want to make the key label. The order of the atom number is
+        #important so we create the key label according to the order specified.
+        key = str(atom1)+'|'+str(atom2)+'|'+str(atom3)
+
+        #Put in dictionary
+        if key in hbond_dict:
+            print 'ERROR (hbond): '+key+' already exists!'
+        hbond_dict[key] = line
+
+    return hbond_dict
 
 def text_to_dict(text):
     dict = {}
