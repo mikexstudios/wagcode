@@ -30,11 +30,21 @@ def main():
     atom_dict = atom_section_to_dict(sections['atom'])
     #print atom_dict
     bond_dict = bond_section_to_dict(sections['bond'])
+    print len(bond_dict)
     #print bond_dict
     #print bond_dict['1|1']
     #print bond_dict['11|11']
-    
-    
+    offdiag_dict = offdiag_section_to_dict(sections['offdiag'])
+    print len(offdiag_dict)
+    #print offdiag_dict
+    #print offdiag_dict['1|2']
+    #print offdiag_dict['2|11']
+    angle_dict = angle_section_to_dict(sections['angle'])
+    #print angle_dict
+    print len(angle_dict)
+    #print angle_dict['1|1|1']
+    #print angle_dict['2|1|11']
+
 
     ##Parse text into dict-line
     #base_dict = text_to_dict(base_text.splitlines())
@@ -207,6 +217,8 @@ def atom_section_to_dict(lines):
             entry.append(lines[i+3])
             
             #Now add to dictionary
+            if m.group(1) in atom_dict:
+                print 'ERROR (atom): '+m.group(1)+' already exists!'
             atom_dict[m.group(1)] = entry
 
     return atom_dict
@@ -219,8 +231,9 @@ def bond_section_to_dict(lines):
     value are the two lines associated with each bond.
 
     @param lines Array of strings that comprise the lines of the bond section.
-    @return dict Dictionary, each key is bond representation; each value
-                 contains the associated two lines of that bond type.
+    @return dict Dictionary, each key is bond representation; each value is an
+                 array of strings that contains the associated two lines of that
+                 bond type.
     '''
     bond_dict = {}
     
@@ -251,9 +264,91 @@ def bond_section_to_dict(lines):
         entry = []
         entry.append(lines[i])
         entry.append(lines[i+1])
+        if key in bond_dict:
+            print 'ERROR (bond): '+key+' already exists!'
         bond_dict[key] = entry
 
     return bond_dict
+
+def offdiag_section_to_dict(lines):
+    '''
+    Given an array of lines for the off-diagonal section, parses the lines into a
+    dictionary where each key is a representation of the off-diag where the smaller
+    atom number is always on the left (ie. '1|2', '3|5', '4|15', etc.), and the
+    value is the line associated with each off-diagonal term.
+
+    @param lines Array of strings that comprise the lines of the off-diag section.
+    @return dict Dictionary, each key is off-diag representation; each value
+                 is a string that contains the associated line of that bond type.
+    '''
+    offdiag_dict = {}
+    
+    #Sample line:
+    #  1  2   0.1239   1.4004   9.8467   1.1210  -1.0000  -1.0000                    
+    for line in lines:
+        #The line begins with two numbers of atoms in the off-diag:
+        s = line.split()
+        assert len(s) == 8 #sanity check
+        atom1 = int(s[0])
+        atom2 = int(s[1])
+
+        #Now we want to make the key label. We always write the smaller atom
+        #number to the left so that we don't end up with duplicates. For
+        #instance, between atom 1 and 15, we always make the key as: '1|15' and
+        #not as: '15|1'.
+        if atom1 <= atom2:
+            key = str(atom1)+'|'+str(atom2)
+        else:
+            key = str(atom2)+'|'+str(atom1)
+
+        #Put in dictionary
+        if key in offdiag_dict:
+            print 'ERROR (offdiag): '+key+' already exists!'
+        offdiag_dict[key] = line
+
+    return offdiag_dict
+
+def angle_section_to_dict(lines):
+    '''
+    Given an array of lines for the angle section, parses the lines into a
+    dictionary where each key is a representation of the angle where the left-
+    most number is always smaller than the right-most number (ie. '1|5|2',
+    '3|4|5', '4|1|15', etc.), and the value is the line associated with each
+    angle term.
+
+    @param lines Array of strings that comprise the lines of the angle section.
+    @return dict Dictionary, each key is angle representation; each value
+                 is a string that contains the associated line of that angle.
+    '''
+    angle_dict = {}
+    
+    #Sample line:
+    #  1  1  1  59.0573  30.7029   0.7606   0.0000   0.7180   6.2933   1.1244        
+    for line in lines:
+        #The line begins with three numbers denoting the atoms involved in
+        #angle:
+        s = line.split()
+        assert len(s) == 10 #sanity check
+        atom1 = int(s[0])
+        atom2 = int(s[1])
+        atom3 = int(s[2])
+
+        #Now we want to make the key label. We know that an angle representation
+        #like:  1 2 3 is equivalent to 3 2 1. Essentially, the middle term must
+        #remain in place, but the end terms can swap. Therefore, for consistency
+        #in comparison, we always write the smaller atom number of the two ends
+        #on the left end. For example, 6 1 4 would be written as '4|1|6'.
+        if atom1 <= atom3:
+            key = str(atom1)+'|'+str(atom2)+'|'+str(atom3)
+        else:
+            key = str(atom3)+'|'+str(atom2)+'|'+str(atom1)
+
+        #Put in dictionary
+        if key in angle_dict:
+            print 'ERROR (angle): '+key+' already exists!'
+        angle_dict[key] = line
+
+    return angle_dict
 
 def text_to_dict(text):
     dict = {}
