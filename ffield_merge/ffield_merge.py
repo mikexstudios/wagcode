@@ -68,20 +68,24 @@ def main():
     to_f.sections['atom'] = merged_sections['atom']
     #print merged_sections['atom']
     #print to_f.sections['atom']
+    #print from_f.get_atom_num_mapping()
     #print to_f.get_atom_num_mapping()
+    #print merge_f.to_f.get_atom_num_mapping()
    
     #Get the equivalent numbers of our move_atoms. We do this after we've merged
     #the atom_dicts so that the atoms we moved over will exist in our 'to' map.
-    from_move_atoms_num = []
-    to_move_atoms_num = []
-    for atom_label in move_atoms:
-        from_move_atoms_num.append(from_f.atom_num_lookup(atom_label))
-        to_move_atoms_num.append(to_f.atom_num_lookup(atom_label))
-    from_move_atoms_num = tuple(from_move_atoms_num)
-    to_move_atoms_num = tuple(to_move_atoms_num)
-    move_atoms_num = {'from': from_move_atoms_num, 'to': to_move_atoms_num}
-    
-    print move_atoms_num
+    #from_move_atoms_num = []
+    #to_move_atoms_num = []
+    #for atom_label in move_atoms:
+    #    from_move_atoms_num.append(from_f.atom_num_lookup(atom_label))
+    #    to_move_atoms_num.append(to_f.atom_num_lookup(atom_label))
+    #from_move_atoms_num = tuple(from_move_atoms_num)
+    #to_move_atoms_num = tuple(to_move_atoms_num)
+    #move_atoms_num = {'from': from_move_atoms_num, 'to': to_move_atoms_num}
+    #print move_atoms_num
+
+    print merge_f.get_equivalent_to_atom_num(15)    
+
     return
 
     merged_bond_dict = merge_bond_dict(from_bond_dict, to_bond_dict)
@@ -107,7 +111,30 @@ class Ffield_merge:
     from_f = None
     to_f = None
     move_atoms = ()
+    
+    def get_equivalent_to_atom_num(self, from_atom_num):
+        '''
+        Given an atom num from 'from' ffield, returns the equivalent atom num
+        from the 'to' ffield. If no equivalent atom num exists, returns false.
+        '''
+        #Look up label for the given 'from' atom num:
+        try:
+            from_atom_label = self.from_f.atom_label_lookup(from_atom_num)
+        except ValueError:
+            #Means that the atom num was not found.
+            print 'ERROR: Atom num '+from_atom_num+" was not found in the "+\
+                  +'from ffield!'
+            sys.exit(0)
+        
+        #Now find the number in 'to' for this label:
+        try:
+            to_atom_num = self.to_f.atom_num_lookup(from_atom_label)
+        except ValueError:
+            #Means that the atom label was not found.
+            return False
 
+        return to_atom_num
+    
     def atom_dict_to_lines(self, atom_dict):
         '''
         Given an atom dict, will return a list of strings that

@@ -186,8 +186,9 @@ class Ffield:
     
     def atom_num_lookup(self, atom_label):
         '''
-        Given an array of lines for the atom section and an atom label (ie. 'C',
-        'H', etc.), returns the atom number associated with that label.
+        Given an atom label (ie. 'C', 'H', etc.), returns the atom number
+        associated with that label. If such label does not exist, raises
+        ValueError.
     
         @param atom_label String for atom label (ie. 'C', 'H', etc.).
         @return int Integer associated with that atom label.
@@ -196,11 +197,26 @@ class Ffield:
         try:
             atom_num_dict[atom_label]
         except KeyError:
-            print 'ERROR: '+atom_label+' could not be found in atoms dict.'
-            sys.exit()
+            #print 'ERROR: '+atom_label+' could not be found in atoms dict.'
+            raise ValueError
 
         return atom_num_dict[atom_label]
        
+    def atom_label_lookup(self, atom_num):
+        '''
+        Given an atom num (ie. 1, 2, etc.), returns the atom label
+        associated with that number. If atom num does not exist in this ffield,
+        raises ValueError.
+    
+        @param atom_num Integer for atom (ie. 1, 2, etc.)
+        @return string Atom label associated with that number.
+        '''
+        atom_num_dict = self.get_atom_num_mapping()
+        for k, v in atom_num_dict.iteritems():
+            if v == atom_num:
+                return k
+
+        raise ValueError
 
     def atom_section_to_dict(self):
         '''
