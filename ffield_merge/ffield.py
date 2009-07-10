@@ -60,7 +60,10 @@ class Ffield:
     sections = {}
 
     def __init__(self):
-        pass
+        #For some strange reason, must initialize variables here. Otherwise,
+        #they will share the same state as previously instantiated object! WTF!
+        self.f = None
+        self.sections = {}
 
     def __del__(self):
         #self.f.close()
@@ -78,7 +81,6 @@ class Ffield:
         @param f File stream for ffield.
         @return dict Dictionary of sections. The key's are the section labels.
         '''
-    
         #Identifiers for each section:
         #For general:
         #39       ! Number of general parameters                                        
@@ -453,6 +455,7 @@ def tests():
 
 
 def main():
+    print 'here'
     to_ffield   = 'ffield_ti-o-h-na-cl-s-p'
     to_f = Ffield()
     to_f.load(to_ffield)
