@@ -58,7 +58,9 @@ def main():
     #2. If additional move atoms are specified, those are also moved from 'from'
     #   to 'to' despite the conflict. The 'from' version will overwrite the 'to'
     #   version.
+    merged_atom_dict = merge_atom_dict(from_atom_dict, to_atom_dict)
     #merged_atom_dict = merge_atom_dict(from_atom_dict, to_atom_dict, move_atoms)
+    print merged_atom_dict
 
     ##Parse text into dict-line
     #base_dict = text_to_dict(base_text.splitlines())
@@ -73,6 +75,57 @@ def main():
     #    print v
     #
     #print 'Total entries: '+str(len(merged_dict))
+
+def merge_atom_dict(from_dict, to_dict, move_atoms = ()):
+    '''
+    Given two atom dicts (from and to) and also optional atoms to forcefully
+    move over (the specified from atoms will overwrite the to atoms), will
+    return a dictionary with merged atom entries.
+
+    @param from_dict Dictionary where key is atom label and value are associated
+                     atom lines. Entries from this dictionary will be moved over
+                     to the 'to_dict'. If move_atoms are specified, then such
+                     entries from this dictionary will replace the corresponding
+                     entries in 'to_dict'.
+    @param to_dict Dictionary where key is atom label and value are associated
+                   atom lines. Entries from 'from_dict' will be merged into this
+                   dictionary.
+    @param move_atoms A list/set/tuple of atom_labels that will be moved from
+                      'from_dict' to 'to_dict' regardless if the entry already
+                      exists in 'to_dict'. (Optional)
+    @return dict Merged dictionary from from_dict and to_dict.
+    '''
+    #NOTE: Instead of creating a separate merge_dict, we will just make all the
+    #      changes on to_dict.
+    for k, v in from_dict.iteritems():
+        #If there is no conflict in merger, or if move_atoms say that we must
+        #move the atom_label entry:
+        if k not in to_dict or k in move_atoms:
+            print 'Merged '+k
+            to_dict[k] = v
+
+    return to_dict
+
+def merge_dicts(base, override):
+    #We put restrictions for only CHONS atoms:
+    #1. Must contain only 0, 1,2,3,4,5 digits
+    #2. Max length of 4 (so that we don't have any double digit stuff)
+    allowed_digits = (0, 1, 2, 3, 4, 5)
+
+    for k, v in override.iteritems():
+        if len(k) > 4:
+            print 'ERROR: len gt 4 -> '+k
+            continue
+        for digit in k:
+            digit = int(digit)
+            if digit in allowed_digits:
+                pass #Do nothing
+            else:
+                print 'ERROR: bad digit -> '+k
+                continue
+        base[k] = v
+
+    return base
 
 def get_lines(f, start, end = None):
     '''
@@ -493,26 +546,6 @@ def text_to_dict(text):
 
     return dict
 
-def merge_dicts(base, override):
-    #We put restrictions for only CHONS atoms:
-    #1. Must contain only 0, 1,2,3,4,5 digits
-    #2. Max length of 4 (so that we don't have any double digit stuff)
-    allowed_digits = (0, 1, 2, 3, 4, 5)
-
-    for k, v in override.iteritems():
-        if len(k) > 4:
-            print 'ERROR: len gt 4 -> '+k
-            continue
-        for digit in k:
-            digit = int(digit)
-            if digit in allowed_digits:
-                pass #Do nothing
-            else:
-                print 'ERROR: bad digit -> '+k
-                continue
-        base[k] = v
-
-    return base
 
 def tests():
 
