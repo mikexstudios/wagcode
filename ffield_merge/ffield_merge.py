@@ -19,21 +19,15 @@ from ffield import Ffield
 
 from_ffield = 'ffield_v-bi-ti-mo-ruN'
 to_ffield   = 'ffield_ti-o-h-na-cl-s-p'
-move_atoms = ('C', 'H', 'O', 'N', 'S')
+#move_atoms = ('C', 'H', 'O', 'N', 'S')
 #move_atoms = ('Ti',)
+move_atoms = ('Ru',)
 
 
 def main():
+    merged_sections = {}
+
     #Parse file into each section
-    #from_f = file(from_ffield)
-    #from_sections = parse_sections(from_f)
-    #from_atom_dict = atom_section_to_dict(from_sections['atom'])
-    #from_bond_dict = bond_section_to_dict(from_sections['bond'])
-    #from_offdiag_dict = offdiag_section_to_dict(from_sections['offdiag'])
-    #from_angle_dict = angle_section_to_dict(from_sections['angle'])
-    #from_torsion_dict = torsion_section_to_dict(from_sections['torsion'])
-    #from_hbond_dict = hbond_section_to_dict(from_sections['hbond'])
-    
     from_f = Ffield()
     from_f.load(from_ffield)
     from_f.parse_sections()
@@ -63,17 +57,23 @@ def main():
     #to_torsion_dict = torsion_section_to_dict(to_sections['torsion'])
     #to_hbond_dict = hbond_section_to_dict(to_sections['hbond'])
     
-    #Now create merged sections. Merge does the following:
-    #1. Move over any entries that 'from' has, that 'to' doesn't have.
-    #2. If additional move atoms are specified, those are also moved from 'from'
-    #   to 'to' despite the conflict. The 'from' version will overwrite the 'to'
-    #   version.
-    merged_atom_dict = merge_atom_dict(from_atom_dict, to_atom_dict)
-    #merged_atom_dict = merge_atom_dict(from_atom_dict, to_atom_dict, move_atoms)
+    #Now create merged sections. Merge moves entries from 'from'
+    #to 'to' that are specified in the move_atoms tuple despite any conflict.
+    #The 'from' version will overwrite the 'to' version.
+    merged_atom_dict = merge_atom_dict(from_atom_dict, to_atom_dict, move_atoms)
     #print merged_atom_dict
+    
+    #Save merged atom section to the 'to' ffield. (Easier than creating a whole
+    #new merged ffield file for now).
+    merged_sections['atom'] = atom_dict_to_lines(to_f, merged_atom_dict)
+    to_f.sections['atom'] = merged_sections['atom']
+    #print merged_sections['atom']
+    #print to_f.sections['atom']
+    print to_f.get_atom_num_mapping()
    
     #Get the equivalent numbers of our move_atoms. We do this after we've merged
     #the atom_dicts.
+    return
     from_move_atoms_num = []
     to_move_atoms_num = []
     for atom_label in move_atoms:
@@ -103,10 +103,59 @@ def main():
     #
     #print 'Total entries: '+str(len(merged_dict))
 
-def merge_atom_dict(from_dict, to_dict, move_atoms = ()):
+def atom_dict_to_lines(ffield, atom_dict):
     '''
-    Given two atom dicts (from and to) and also optional atoms to forcefully
-    move over (the specified from atoms will overwrite the to atoms), will
+    Given an atom dict and a ffield object, will return a list of strings that
+    comprise the atom section of ffield structured in a way such that new
+    entries are placed after existing entries of the ffield object.
+    TODO: Place new entries before the 'X' atom be after existing entries.
+    
+    @param ffield The ffield object that we denote as having the existing
+                  entries.
+    @param atom_dict Atoms dictionary that we want to add to the ffield object.
+    @return list List of strings that represents the atom section of ffield.
+    '''
+    #Get a mapping of atom label to num for existing entries so that we know
+    #what the order should be.
+    atom_num_map = ffield.get_atom_num_mapping()
+    
+    #Now generate an array of atom labels that denotes the order which we will
+    #output the existing entries.
+    num_atoms = len(atom_num_map)
+    atoms_label_order = []
+    #Helper function:
+    def get_atom_label_for_num(num):
+        for k, v in atom_num_map.iteritems():
+            if v == num:
+                return k
+    for i in range(1, num_atoms+1): #generates numbers 1 to num_atoms
+        atoms_label_order.append(get_atom_label_for_num(i))
+
+    #Now do we have new entries? We generate a new set composed of elements in
+    #current_labels that are not in existing_labels:
+    existing_labels = set(atom_num_map.keys())
+    current_labels = set(atom_dict.keys())
+    new_labels = current_labels.difference(existing_labels)
+    #Now add to our atom labels order list. If new_labels is empty, nothing
+    #happens.
+    atoms_label_order.extend(new_labels)
+
+    #Now generate our output list:
+    output = []
+    for k in atoms_label_order:
+        #Atom entries are 4 lines long, so we must keep that in mind when
+        #appending:
+        for line in atom_dict[k]:
+            output.append(line)
+
+    return output
+
+
+
+def merge_atom_dict(from_dict, to_dict, move_atoms):
+    '''
+    Given two atom dicts (from and to) and atoms to forcefully
+    move over (the specified 'from' atoms will overwrite the 'to' atoms), will
     return a dictionary with merged atom entries.
 
     @param from_dict Dictionary where key is atom label and value are associated
@@ -119,7 +168,7 @@ def merge_atom_dict(from_dict, to_dict, move_atoms = ()):
                    dictionary.
     @param move_atoms A list/set/tuple of atom_labels that will be moved from
                       'from_dict' to 'to_dict' regardless if the entry already
-                      exists in 'to_dict'. (Optional)
+                      exists in 'to_dict'. 
     @return dict Merged dictionary from from_dict and to_dict.
     '''
     #NOTE: Instead of creating a separate merge_dict, we will just make all the
@@ -127,8 +176,13 @@ def merge_atom_dict(from_dict, to_dict, move_atoms = ()):
     for k, v in from_dict.iteritems():
         #If there is no conflict in merger, or if move_atoms say that we must
         #move the atom_label entry:
-        if k not in to_dict or k in move_atoms:
-            print 'Merged '+k
+        if k in move_atoms:
+            #Check if we overwrote an existing entry (for informative purposes):
+            if k in to_dict:
+                print 'Merged '+k+' but overwrote existing entry.'
+            else:
+                print 'Merged '+k
+
             to_dict[k] = v
 
     return to_dict
