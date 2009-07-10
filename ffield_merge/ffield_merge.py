@@ -50,28 +50,21 @@ def main():
     #to_torsion_dict = to_f.torsion_section_to_dict()
     #to_hbond_dict = to_f.hbond_section_to_dict()
     
-    #to_f = file(to_ffield)
-    #to_sections = parse_sections(to_f)
-    #to_atom_dict = atom_section_to_dict(to_sections['atom'])
-    #to_bond_dict = bond_section_to_dict(to_sections['bond'])
-    #to_offdiag_dict = offdiag_section_to_dict(to_sections['offdiag'])
-    #to_angle_dict = angle_section_to_dict(to_sections['angle'])
-    #to_torsion_dict = torsion_section_to_dict(to_sections['torsion'])
-    #to_hbond_dict = hbond_section_to_dict(to_sections['hbond'])
-    
     #Now create merged sections. Merge moves entries from 'from'
     #to 'to' that are specified in the move_atoms tuple despite any conflict.
     #The 'from' version will overwrite the 'to' version.
-    merged_f = Ffield_merge()
-    merged_f.from_f = from_f
-    merged_f.to_f = to_f
-    merged_f.move_atoms = move_atoms
-    merged_atom_dict = merged_f.merge_atom_dict()
-    print merged_atom_dict.keys()
-    return
+    merge_f = Ffield_merge()
+    merge_f.from_f = from_f
+    merge_f.to_f = to_f
+    merge_f.move_atoms = move_atoms
+    merged_atom_dict = merge_f.merge_atom_dict()
+    #print merged_atom_dict.keys()
+    
     #Save merged atom section to the 'to' ffield. (Easier than creating a whole
     #new merged ffield file for now).
-    merged_sections['atom'] = atom_dict_to_lines(to_f, merged_atom_dict)
+    #TODO: Have atom_dict_to_lines call merge_atom_dict() without needing the
+    #      user to pass in the merged atom dict.
+    merged_sections['atom'] = merge_f.atom_dict_to_lines(merged_atom_dict)
     to_f.sections['atom'] = merged_sections['atom']
     #print merged_sections['atom']
     #print to_f.sections['atom']
@@ -89,6 +82,7 @@ def main():
     move_atoms_num = {'from': from_move_atoms_num, 'to': to_move_atoms_num}
     
     print move_atoms_num
+    return
 
     merged_bond_dict = merge_bond_dict(from_bond_dict, to_bond_dict)
     #merged_bond_dict = merge_bond_dict(from_bond_dict, to_bond_dict,
@@ -114,21 +108,19 @@ class Ffield_merge:
     to_f = None
     move_atoms = ()
 
-    def atom_dict_to_lines(ffield, atom_dict):
+    def atom_dict_to_lines(self, atom_dict):
         '''
-        Given an atom dict and a ffield object, will return a list of strings that
+        Given an atom dict, will return a list of strings that
         comprise the atom section of ffield structured in a way such that new
-        entries are placed after existing entries of the ffield object.
+        entries are placed after existing entries of the 'to' ffield object.
         TODO: Place new entries before the 'X' atom be after existing entries.
         
-        @param ffield The ffield object that we denote as having the existing
-                      entries.
         @param atom_dict Atoms dictionary that we want to add to the ffield object.
         @return list List of strings that represents the atom section of ffield.
         '''
         #Get a mapping of atom label to num for existing entries so that we know
         #what the order should be.
-        atom_num_map = ffield.get_atom_num_mapping()
+        atom_num_map = self.to_f.get_atom_num_mapping()
         
         #Now generate an array of atom labels that denotes the order which we will
         #output the existing entries.
@@ -181,9 +173,7 @@ class Ffield_merge:
         @return dict Merged dictionary from from_dict and to_dict.
         '''
         from_dict = self.from_f.atom_section_to_dict()
-        print from_dict.keys()
         to_dict = self.to_f.atom_section_to_dict()
-        print to_dict.keys()
         merge_dict = to_dict.copy()
         for k, v in from_dict.iteritems():
             #If there is no conflict in merger, or if move_atoms say that we must

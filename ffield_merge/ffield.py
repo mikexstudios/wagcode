@@ -56,6 +56,8 @@ def get_line(f, num):
     return get_lines(f, num, num)[0]
 
 class Ffield:
+    #Variables defined out here automatically become static. Since dictionaries
+    #are pointers, we need to initialize them under __init__.
     f = None #Will hold the file handle. Need to do this since no static vars.
     sections = {}
 
