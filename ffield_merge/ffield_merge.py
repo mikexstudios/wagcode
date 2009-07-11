@@ -22,9 +22,9 @@ to_ffield   = 'ffield_ti-o-h-na-cl-s-p'
 #to_ffield = 'ffield_v-bi-ti-mo-ruN'
 #from_ffield   = 'ffield_ti-o-h-na-cl-s-p'
 #move_atoms = ('C', 'H', 'O', 'N', 'S')
-#move_atoms = ('Ti',)
+move_atoms = ('Ti',)
 #move_atoms = ('Ti', 'Ru')
-move_atoms = ('Ru',)
+#move_atoms = ('Ru',)
 
 
 def main():
@@ -99,6 +99,13 @@ def main():
     
     merged_angle_dict = merge_f.merge_angle_dict()
     #print merged_angle_dict
+    to_f.sections['angle'] = merge_f.generic_dict_to_lines(merged_angle_dict)
+    #print to_f.sections['angle']
+    
+    merged_torsion_dict = merge_f.merge_torsion_dict()
+    #print merged_torsion_dict
+    to_f.sections['torsion'] = merge_f.generic_dict_to_lines(merged_torsion_dict)
+    #print to_f.sections['torsion']
 
 class Ffield_merge:
     from_f = None
@@ -494,6 +501,97 @@ class Ffield_merge:
             
             v = s[0] #Holds the substituted string
             print 'Merged (angle) '+k+' to '+str(equiv_to_atoms_in_angle)
+            #print v
+            merge_dict[k] = v
+    
+        return merge_dict
+    
+    def merge_torsion_dict(self):
+        '''
+        Given two torsion dicts (from and to) and also optional atoms to
+        forcefully move over (the specified from atoms will overwrite the to
+        atoms), will return a dictionary with merged torsion entries. For an
+        torsion entry to be forcefully copied over (possibly replacing any such
+        existing entries in 'to_dict'), at least one atoms involved in the
+        torsion must be specified in the move_atoms list.
+    
+        @return dict Merged dictionary from from_dict and to_dict.
+        '''
+        from_dict = self.from_f.torsion_section_to_dict()
+        to_dict = self.to_f.torsion_section_to_dict()
+        merge_dict = to_dict.copy()
+
+        for k, v in from_dict.iteritems():
+            #Deconstruct the key into atom numbers:
+            #TODO: move this into ffield class.
+            from_atoms_in_torsion = k.split('|')
+            from_atoms_in_torsion = map(int, from_atoms_in_torsion) #Convert str to int
+            #Since we will only work with torsion entries that have at least one
+            #atom from move_atoms, let's weed out entries that we don't consider
+            #here.  
+            at_least_one = False
+            for atom_num in from_atoms_in_torsion:
+                atom_label = self.from_f.atom_label_lookup(atom_num)
+                if atom_label in self.move_atoms:
+                    at_least_one = True
+                    break
+            if at_least_one == False:
+                continue
+            
+            #Now convert the atom numbers from 'from' to the equivalent atom numbers
+            #in 'to'. For instance, if C is denoted 3 in 'from' but 4 in 'to', then
+            #we make that conversion here (using list comprehension). 
+            #Also, all atoms in bond MUST be in the atoms list for the 'to'
+            #file. Otherwise, there's no point in moving it over since it won't
+            #be used anyway.
+            try:
+                equiv_to_atoms_in_torsion = [self.get_equivalent_to_atom_num(i) \
+                                           for i in from_atoms_in_torsion]
+            except ValueError:
+                #Means that at least one of the atoms do not exist in the 'to'
+                #file.
+                continue #Move to next offdiag
+            
+            #At this point:
+            #1. At least one atom in torsion is in our move_atoms list.
+            #2. All atoms in torsion are in the 'to' atoms list.
+            #So, let's move the torsion entry in 'from' to 'to'. But first, need to
+            #modify the 'from' entry to reflect the new atom numbers.
+            def generate_atom_num_string(atoms):
+                '''
+                Given atom numbers in a tuple, generates a string of those atom
+                numbers.
+                '''
+                atom_num_str = ' ' #Start with a space
+                for atom in atoms:
+                    #atom will be at most two digits. If one digit, we want the
+                    #ten's digit place to be a space:
+                    atom_num_str += '%2d ' % atom
+                return atom_num_str
+
+            #Generate atoms num string
+            for z in range(2): #z is not used, loop used to count twice
+                pattern = generate_atom_num_string(from_atoms_in_torsion)
+                repl = generate_atom_num_string(equiv_to_atoms_in_torsion)
+                s = re.subn(pattern, repl, v)
+                if s[1] <= 0: 
+                    #If no substitutions were made, this is most likely that the
+                    #entry in the file has the bonds reversed (ie. Instead of 1 2
+                    #it's 2 1). Therefore, we will reverse the order here and try
+                    #to re-replace.
+                    print 'Failed to merge (torsion) '+k+' to '+str(equiv_to_atoms_in_torsion)
+                    print 'Reversing the order and trying again...'
+                    from_atoms_in_torsion = list(from_atoms_in_torsion)
+                    from_atoms_in_torsion.reverse()
+                    equiv_to_atoms_in_torsion = list(equiv_to_atoms_in_torsion)
+                    equiv_to_atoms_in_torsion.reverse()
+                    continue #Retry the substitution
+            if s[1] <= 0: #If no substitutions were made
+                print 'ERROR: Torsion substitution failed!'
+                raise Exception
+            
+            v = s[0] #Holds the substituted string
+            print 'Merged (torsion) '+k+' to '+str(equiv_to_atoms_in_torsion)
             #print v
             merge_dict[k] = v
     

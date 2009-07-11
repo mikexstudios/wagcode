@@ -204,13 +204,18 @@ class Ffield:
        
     def atom_label_lookup(self, atom_num):
         '''
-        Given an atom num (ie. 1, 2, etc.), returns the atom label
-        associated with that number. If atom num does not exist in this ffield,
-        raises ValueError.
+        Given an atom num (ie. 1, 2, etc.), returns the atom label associated
+        with that number. If atom num does not exist in this ffield, raises
+        ValueError. If atom num is 0 (like in torsion entries), that denotes a
+        wildcard atom, which we will denote as '*'.
     
         @param atom_num Integer for atom (ie. 1, 2, etc.)
         @return string Atom label associated with that number.
         '''
+        #Check for wildcard entry (mainly for torsion section):
+        if atom_num == 0:
+            return '*'
+
         atom_num_dict = self.get_atom_num_mapping()
         for k, v in atom_num_dict.iteritems():
             if v == atom_num:
