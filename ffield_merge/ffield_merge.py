@@ -27,8 +27,6 @@ move_atoms = ('Ru',)
 
 
 def main():
-    merged_sections = {}
-
     #Parse file into each section
     from_f = Ffield()
     from_f.load(from_ffield)
@@ -66,8 +64,7 @@ def main():
     #new merged ffield file for now).
     #TODO: Have atom_dict_to_lines call merge_atom_dict() without needing the
     #      user to pass in the merged atom dict.
-    merged_sections['atom'] = merge_f.atom_dict_to_lines(merged_atom_dict)
-    to_f.sections['atom'] = merged_sections['atom']
+    to_f.sections['atom'] = merge_f.atom_dict_to_lines(merged_atom_dict)
     #print merged_sections['atom']
     #print to_f.sections['atom']
     #print from_f.get_atom_num_mapping()
@@ -87,25 +84,15 @@ def main():
     #print move_atoms_num
 
     merged_bond_dict = merge_f.merge_bond_dict()
-    #merged_bond_dict = merge_bond_dict(from_bond_dict, to_bond_dict,
-    #                                   move_atoms_num)
     #print merged_bond_dict
     
-    return
-
-    ##Parse text into dict-line
-    #base_dict = text_to_dict(base_text.splitlines())
-    ##print str(len(base_dict))
-    #override_dict = text_to_dict(override_text.splitlines())
-
-    ##Merge dicts
-    #merged_dict = merge_dicts(base_dict, override_dict)
-
-    ##Now print out all lines:
-    #for k, v in merged_dict.iteritems():
-    #    print v
-    #
-    #print 'Total entries: '+str(len(merged_dict))
+    #Now convert the entries back into lines so that they can be saved into the
+    #section:
+    to_f.sections['bond'] = merge_f.bond_dict_to_lines(merged_bond_dict)
+    #print to_f.sections['bond']
+    
+    merged_offdiag_dict = merge_f.merge_offdiag_dict()
+    print merged_offdiag_dict
 
 class Ffield_merge:
     from_f = None
@@ -222,8 +209,6 @@ class Ffield_merge:
         to_dict = self.to_f.bond_section_to_dict()
         merge_dict = to_dict.copy()
 
-        #NOTE: Instead of creating a separate merge_dict, we will just make all the
-        #      changes on to_dict.
         for k, v in from_dict.iteritems():
             #Deconstruct the key into atom numbers:
             #TODO: move this into ffield class.
@@ -233,12 +218,6 @@ class Ffield_merge:
 
             #Since we will only work with bonds that have at least one atom from
             #move_atoms, let's weed out entries that we don't consider here.
-            #The approach here is to get the union of our bond atoms and move atoms.
-            #If both of our bond atoms are in move atoms set, then the len of the
-            #combined set will be the same as the len of the move atoms set. If one
-            #of our bond atoms are in the move atoms set, then the len will be one
-            #greater than the len of the move atoms set. So to check for no match, we
-            #check for unions greater than len(move_atoms_num) + 1.
             at_least_one = False
             for atom_num in from_atoms_in_bond:
                 atom_label = self.from_f.atom_label_lookup(atom_num)
@@ -248,11 +227,6 @@ class Ffield_merge:
             if at_least_one == False:
                 continue
 
-
-            #if len(from_atoms_in_bond.union(move_atoms_num)) > \
-            #    len(move_atoms_num) + 1:
-            #    continue #Move on to next bond
-            
             #Now convert the atom numbers from 'from' to the equivalent atom numbers
             #in 'to'. For instance, if C is denoted 3 in 'from' but 4 in 'to', then
             #we make that conversion here (using list comprehension). 
@@ -293,63 +267,111 @@ class Ffield_merge:
                 raise Exception
             
             v[0] = s[0] #Holds the substituted string
-            print 'Merged '+k+' to '+str(equiv_to_atoms_in_bond)
+            print 'Merged (bond) '+k+' to '+str(equiv_to_atoms_in_bond)
             #print v
             merge_dict[k] = v
     
         return merge_dict
     
-    #def get_equivalent_atom_num(from_atoms, to_atoms, from_atom_num):
-    #    '''
-    #    Given a list/tuple of from_atoms and to_atoms and also an atom number from
-    #    the from_atom list, returns the equivalent atom number from the to_atoms
-    #    list.
-    #
-    #    @param from_atoms List/tuple of atom numbers.
-    #    @param to_atoms List/tuple of atom numbers that has equivalent ordering as
-    #                    the from_atoms list.
-    #    @param from_atom_num An atom number from the from_atoms list that we are
-    #                         trying to convert to a 'to' atom number.
-    #    @return int Equivalent atom num that is in the 'to_atoms' list.
-    #    '''
-    #    from_atoms = list(from_atoms) #Must be list to use .index() method
-    #    
-    #    try:
-    #        i = from_atoms.index(from_atom_num)
-    #    except ValueError:
-    #        print 'ERROR: Atom number '+str(from_atom_num)+" does not "+\
-    #              "exist in 'from' list"
-    #        sys.exit()
-    #
-    #    try:
-    #        to_atoms[i]
-    #    except IndexError:
-    #        print 'ERROR: Index '+str(i)+" does not "+\
-    #              "exist in 'to' list"
-    #        sys.exit()
-    #
-    #
-    #    return to_atoms[i]
+    def bond_dict_to_lines(self, bond_dict):
+        '''
+        Given a bond dict, will return a list of strings that
+        comprise the bond section of ffield. 
+        
+        @param bond_dict Bonds dictionary that we want to add to the ffield object.
+        @return list List of strings that represents the atom section of ffield.
+        '''
+        #The good thing is that when we merged entries, we already updated the
+        #merged bond numbers to reflect any merged atom entries. So essentially,
+        #we can just generate the output without modification:
+        output = []
+        for k, v in bond_dict.iteritems():
+            #Bond entries are 2 lines long, so we must keep that in mind when
+            #appending:
+            for line in v:
+                output.append(line)
+    
+        return output
+    
+    def merge_offdiag_dict(self):
+        '''
+        Given two offdiag dicts (from and to) and also optional atoms to forcefully
+        move over (the specified from atoms will overwrite the to atoms), will
+        return a dictionary with merged offdiag entries. For an offdiag entry to be
+        forcefully copied over (possibly replacing any such existing entries in
+        'to_dict'), at least one atoms involved in the offdiag must be specified
+        in the move_atoms list.
+    
+        @return dict Merged dictionary from from_dict and to_dict.
+        '''
+        from_dict = self.from_f.offdiag_section_to_dict()
+        to_dict = self.to_f.offdiag_section_to_dict()
+        merge_dict = to_dict.copy()
 
+        for k, v in from_dict.iteritems():
+            #Deconstruct the key into atom numbers:
+            #TODO: move this into ffield class.
+            from_atoms_in_offdiag = k.split('|')
+            from_atoms_in_offdiag = map(int, from_atoms_in_offdiag) #Convert str to int
+            from_atoms_in_offdiag = set(from_atoms_in_offdiag)
 
+            #Since we will only work with offdiag entries that have at least one
+            #atom from move_atoms, let's weed out entries that we don't consider
+            #here.  
+            at_least_one = False
+            for atom_num in from_atoms_in_offdiag:
+                atom_label = self.from_f.atom_label_lookup(atom_num)
+                if atom_label in self.move_atoms:
+                    at_least_one = True
+                    break
+            if at_least_one == False:
+                continue
 
+            #Now convert the atom numbers from 'from' to the equivalent atom numbers
+            #in 'to'. For instance, if C is denoted 3 in 'from' but 4 in 'to', then
+            #we make that conversion here (using list comprehension). 
+            #Also, all atoms in bond MUST be in the atoms list for the 'to'
+            #file. Otherwise, there's no point in moving it over since it won't
+            #be used anyway.
+            try:
+                equiv_to_atoms_in_offdiag = [self.get_equivalent_to_atom_num(i) \
+                                             for i in from_atoms_in_offdiag]
+            except ValueError:
+                #Means that at least one of the atoms do not exist in the 'to'
+                #file.
+                continue #Move to next offdiag
+            
+            #At this point:
+            #1. At least one atom in offdiag is in our move_atoms list.
+            #2. Both atoms in offdiag are in the 'to' atoms list.
+            #So, let's move the offdiag entry in 'from' to 'to'. But first, need to
+            #modify the 'from' entry to reflect the new atom numbers.
+            def generate_atom_num_string(atoms):
+                '''
+                Given atom numbers in a tuple, generates a string of those atom
+                numbers.
+                '''
+                atom_num_str = ' ' #Start with a space
+                for atom in atoms:
+                    #atom will be at most two digits. If one digit, we want the
+                    #ten's digit place to be a space:
+                    atom_num_str += '%2d ' % atom
+                return atom_num_str
 
-def text_to_dict(text):
-    dict = {}
-    for line in text:
-        line_elements = line.split() #splits by space
-        if len(line_elements) > 1:
-            #Combine first four to make key
-            k = ''.join(line_elements[0:4])
-            if k in dict:
-                print 'ERROR: '+k+' already exists!'
-            dict[k] = line
-            #print dict[k]
-        #else:
-        #    print 'ERROR: '+line
-
-    return dict
-
+            #Generate atoms num string
+            pattern = generate_atom_num_string(from_atoms_in_offdiag)
+            repl = generate_atom_num_string(equiv_to_atoms_in_offdiag)
+            s = re.subn(pattern, repl, v)
+            if s[1] <= 0: #If no substitutions were made
+                print 'ERROR: Offdiag substitution failed!'
+                raise Exception
+            
+            v = s[0] #Holds the substituted string
+            print 'Merged (offdiag) '+k+' to '+str(equiv_to_atoms_in_offdiag)
+            #print v
+            merge_dict[k] = v
+    
+        return merge_dict
 
 def tests():
 
