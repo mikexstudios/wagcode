@@ -97,6 +97,8 @@ def main():
     to_f.sections['offdiag'] = merge_f.generic_dict_to_lines(merged_offdiag_dict)
     #print to_f.sections['offdiag']
     
+    merged_angle_dict = merge_f.merge_angle_dict()
+    #print merged_angle_dict
 
 class Ffield_merge:
     from_f = None
@@ -264,10 +266,23 @@ class Ffield_merge:
                 return atom_num_str
 
             #Generate atoms num string
-            pattern = generate_atom_num_string(from_atoms_in_bond)
-            repl = generate_atom_num_string(equiv_to_atoms_in_bond)
-            s = re.subn(pattern, repl, v[0])
-            if s[1] <= 0: #If no substitutions were made
+            for z in range(2): #z is not used, loop used to count twice
+                pattern = generate_atom_num_string(from_atoms_in_bond)
+                repl = generate_atom_num_string(equiv_to_atoms_in_bond)
+                s = re.subn(pattern, repl, v[0])
+                if s[1] <= 0: 
+                    #If no substitutions were made, this is most likely that the
+                    #entry in the file has the bonds reversed (ie. Instead of 1 2
+                    #it's 2 1). Therefore, we will reverse the order here and try
+                    #to re-replace.
+                    print 'Failed to merged (bond) '+k+' to '+str(equiv_to_atoms_in_bond)
+                    print 'Reversing the order and trying again...'
+                    from_atoms_in_bond = list(from_atoms_in_bond)
+                    from_atoms_in_bond.reverse()
+                    equiv_to_atoms_in_bond = list(equiv_to_atoms_in_bond)
+                    equiv_to_atoms_in_bond.reverse()
+                    continue #Retry the substitution
+            if s[1] <= 0: 
                 print 'ERROR: Bond substitution failed!'
                 raise Exception
             
@@ -343,9 +358,22 @@ class Ffield_merge:
                 return atom_num_str
 
             #Generate atoms num string
-            pattern = generate_atom_num_string(from_atoms_in_offdiag)
-            repl = generate_atom_num_string(equiv_to_atoms_in_offdiag)
-            s = re.subn(pattern, repl, v)
+            for z in range(2): #z is not used, loop used to count twice
+                pattern = generate_atom_num_string(from_atoms_in_offdiag)
+                repl = generate_atom_num_string(equiv_to_atoms_in_offdiag)
+                s = re.subn(pattern, repl, v)
+                if s[1] <= 0: 
+                    #If no substitutions were made, this is most likely that the
+                    #entry in the file has the bonds reversed (ie. Instead of 1 2
+                    #it's 2 1). Therefore, we will reverse the order here and try
+                    #to re-replace.
+                    print 'Failed to merged (offdiag) '+k+' to '+str(equiv_to_atoms_in_offdiag)
+                    print 'Reversing the order and trying again...'
+                    from_atoms_in_offdiag = list(from_atoms_in_offdiag)
+                    from_atoms_in_offdiag.reverse()
+                    equiv_to_atoms_in_offdiag = list(equiv_to_atoms_in_offdiag)
+                    equiv_to_atoms_in_offdiag.reverse()
+                    continue #Retry the substitution
             if s[1] <= 0: #If no substitutions were made
                 print 'ERROR: Offdiag substitution failed!'
                 raise Exception
@@ -397,14 +425,14 @@ class Ffield_merge:
         for k, v in from_dict.iteritems():
             #Deconstruct the key into atom numbers:
             #TODO: move this into ffield class.
-            from_atoms_in_offdiag = k.split('|')
-            from_atoms_in_offdiag = map(int, from_atoms_in_offdiag) #Convert str to int
+            from_atoms_in_angle = k.split('|')
+            from_atoms_in_angle = map(int, from_atoms_in_angle) #Convert str to int
 
-            #Since we will only work with offdiag entries that have at least one
+            #Since we will only work with angle entries that have at least one
             #atom from move_atoms, let's weed out entries that we don't consider
             #here.  
             at_least_one = False
-            for atom_num in from_atoms_in_offdiag:
+            for atom_num in from_atoms_in_angle:
                 atom_label = self.from_f.atom_label_lookup(atom_num)
                 if atom_label in self.move_atoms:
                     at_least_one = True
@@ -419,8 +447,8 @@ class Ffield_merge:
             #file. Otherwise, there's no point in moving it over since it won't
             #be used anyway.
             try:
-                equiv_to_atoms_in_offdiag = [self.get_equivalent_to_atom_num(i) \
-                                             for i in from_atoms_in_offdiag]
+                equiv_to_atoms_in_angle = [self.get_equivalent_to_atom_num(i) \
+                                           for i in from_atoms_in_angle]
             except ValueError:
                 #Means that at least one of the atoms do not exist in the 'to'
                 #file.
@@ -444,15 +472,28 @@ class Ffield_merge:
                 return atom_num_str
 
             #Generate atoms num string
-            pattern = generate_atom_num_string(from_atoms_in_offdiag)
-            repl = generate_atom_num_string(equiv_to_atoms_in_offdiag)
-            s = re.subn(pattern, repl, v)
+            for z in range(2): #z is not used, loop used to count twice
+                pattern = generate_atom_num_string(from_atoms_in_angle)
+                repl = generate_atom_num_string(equiv_to_atoms_in_angle)
+                s = re.subn(pattern, repl, v)
+                if s[1] <= 0: 
+                    #If no substitutions were made, this is most likely that the
+                    #entry in the file has the bonds reversed (ie. Instead of 1 2
+                    #it's 2 1). Therefore, we will reverse the order here and try
+                    #to re-replace.
+                    print 'Failed to merge (angle) '+k+' to '+str(equiv_to_atoms_in_angle)
+                    print 'Reversing the order and trying again...'
+                    from_atoms_in_angle = list(from_atoms_in_angle)
+                    from_atoms_in_angle.reverse()
+                    equiv_to_atoms_in_angle = list(equiv_to_atoms_in_angle)
+                    equiv_to_atoms_in_angle.reverse()
+                    continue #Retry the substitution
             if s[1] <= 0: #If no substitutions were made
-                print 'ERROR: Offdiag substitution failed!'
+                print 'ERROR: Angle substitution failed!'
                 raise Exception
             
             v = s[0] #Holds the substituted string
-            print 'Merged (offdiag) '+k+' to '+str(equiv_to_atoms_in_offdiag)
+            print 'Merged (angle) '+k+' to '+str(equiv_to_atoms_in_angle)
             #print v
             merge_dict[k] = v
     
