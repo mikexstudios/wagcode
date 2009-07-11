@@ -19,6 +19,8 @@ from ffield import Ffield
 
 from_ffield = 'ffield_v-bi-ti-mo-ruN'
 to_ffield   = 'ffield_ti-o-h-na-cl-s-p'
+#to_ffield = 'ffield_v-bi-ti-mo-ruN'
+#from_ffield   = 'ffield_ti-o-h-na-cl-s-p'
 #move_atoms = ('C', 'H', 'O', 'N', 'S')
 #move_atoms = ('Ti',)
 move_atoms = ('Ru',)
@@ -84,14 +86,12 @@ def main():
     #move_atoms_num = {'from': from_move_atoms_num, 'to': to_move_atoms_num}
     #print move_atoms_num
 
-    print merge_f.get_equivalent_to_atom_num(15)    
-
-    return
-
-    merged_bond_dict = merge_bond_dict(from_bond_dict, to_bond_dict)
+    merged_bond_dict = merge_f.merge_bond_dict()
     #merged_bond_dict = merge_bond_dict(from_bond_dict, to_bond_dict,
     #                                   move_atoms_num)
     #print merged_bond_dict
+    
+    return
 
     ##Parse text into dict-line
     #base_dict = text_to_dict(base_text.splitlines())
@@ -115,7 +115,8 @@ class Ffield_merge:
     def get_equivalent_to_atom_num(self, from_atom_num):
         '''
         Given an atom num from 'from' ffield, returns the equivalent atom num
-        from the 'to' ffield. If no equivalent atom num exists, returns false.
+        from the 'to' ffield. If no equivalent atom num exists, raises
+        ValueError.
         '''
         #Look up label for the given 'from' atom num:
         try:
@@ -131,7 +132,8 @@ class Ffield_merge:
             to_atom_num = self.to_f.atom_num_lookup(from_atom_label)
         except ValueError:
             #Means that the atom label was not found.
-            return False
+            raise ValueError
+            #return False
 
         return to_atom_num
     
@@ -186,17 +188,6 @@ class Ffield_merge:
         move over (the specified 'from' atoms will overwrite the 'to' atoms), will
         return a dictionary with merged atom entries.
     
-        @param from_dict Dictionary where key is atom label and value are associated
-                         atom lines. Entries from this dictionary will be moved over
-                         to the 'to_dict'. If move_atoms are specified, then such
-                         entries from this dictionary will replace the corresponding
-                         entries in 'to_dict'.
-        @param to_dict Dictionary where key is atom label and value are associated
-                       atom lines. Entries from 'from_dict' will be merged into this
-                       dictionary.
-        @param move_atoms A list/set/tuple of atom_labels that will be moved from
-                          'from_dict' to 'to_dict' regardless if the entry already
-                          exists in 'to_dict'. 
         @return dict Merged dictionary from from_dict and to_dict.
         '''
         from_dict = self.from_f.atom_section_to_dict()
@@ -216,8 +207,7 @@ class Ffield_merge:
     
         return merge_dict
     
-    #NEED ATOM-NUM map for both from and to!!!
-    def merge_bond_dict(from_dict, to_dict, move_atoms):
+    def merge_bond_dict(self):
         '''
         Given two bond dicts (from and to) and also optional atoms to forcefully
         move over (the specified from atoms will overwrite the to atoms), will
@@ -226,33 +216,21 @@ class Ffield_merge:
         'to_dict'), at least one atoms involved in the bond must be specified in the
         move_atoms list.
     
-        @param from_dict Dictionary where key is bond rep. and value are associated
-                         bond lines. Entries from this dictionary will be moved over
-                         to the 'to_dict'. If move_atoms are specified, then such
-                         entries from this dictionary will replace the corresponding
-                         entries in 'to_dict'.
-        @param to_dict Dictionary where key is bond rep. and value are associated
-                       bond lines. Entries from 'from_dict' will be merged into this
-                       dictionary.
-        @param move_atoms A list/set/tuple of atom_labels that will be moved from
-                          'from_dict' to 'to_dict' regardless if the entry already
-                          exists in 'to_dict'. 
+        @return dict Merged dictionary from from_dict and to_dict.
         '''
-        #Make sure move_atoms_num in this case is a dictionary:
-        try:
-            move_atoms_num['from']
-            move_atoms_num['to']
-        except TypeError:
-            print 'ERROR: move_atoms_num must be a dictionary of two tuples!' 
-            sys.exit()
-    
+        from_dict = self.from_f.bond_section_to_dict()
+        to_dict = self.to_f.bond_section_to_dict()
+        merge_dict = to_dict.copy()
+
         #NOTE: Instead of creating a separate merge_dict, we will just make all the
         #      changes on to_dict.
         for k, v in from_dict.iteritems():
             #Deconstruct the key into atom numbers:
+            #TODO: move this into ffield class.
             from_atoms_in_bond = k.split('|')
             from_atoms_in_bond = map(int, from_atoms_in_bond) #Convert str to int
             from_atoms_in_bond = set(from_atoms_in_bond)
+
             #Since we will only work with bonds that have at least one atom from
             #move_atoms, let's weed out entries that we don't consider here.
             #The approach here is to get the union of our bond atoms and move atoms.
@@ -261,64 +239,105 @@ class Ffield_merge:
             #of our bond atoms are in the move atoms set, then the len will be one
             #greater than the len of the move atoms set. So to check for no match, we
             #check for unions greater than len(move_atoms_num) + 1.
-            if len(from_atoms_in_bond.union(move_atoms_num)) > \
-                len(move_atoms_num) + 1:
-                continue #Move on to next bond
+            at_least_one = False
+            for atom_num in from_atoms_in_bond:
+                atom_label = self.from_f.atom_label_lookup(atom_num)
+                if atom_label in self.move_atoms:
+                    at_least_one = True
+                    break
+            if at_least_one == False:
+                continue
+
+
+            #if len(from_atoms_in_bond.union(move_atoms_num)) > \
+            #    len(move_atoms_num) + 1:
+            #    continue #Move on to next bond
             
             #Now convert the atom numbers from 'from' to the equivalent atom numbers
             #in 'to'. For instance, if C is denoted 3 in 'from' but 4 in 'to', then
             #we make that conversion here (using list comprehension). 
-            if from_atoms_in_bond.issubset(move_atoms_num['from']):
-                equiv_to_atoms_in_bond = [get_equivalent_atom_num(
-                                                move_atoms_num['from'],
-                                                move_atoms_num['to'],
-                                                i) \
+            #Also, all atoms in bond MUST be in the atoms list for the 'to'
+            #file. Otherwise, there's no point in moving it over since it won't
+            #be used anyway.
+            try:
+                equiv_to_atoms_in_bond = [self.get_equivalent_to_atom_num(i) \
                                           for i in from_atoms_in_bond]
-                equiv_to_atoms_in_bond = set(equiv_to_atoms_in_bond)
-            else:
-                #Not so elegant: We create a set with a negative number that we know
-                #will NEVER be in the set move_atoms_num['to']. Therefore, the
-                #.issubset() below will always evaluate to false.
-                equiv_to_atoms_in_bond = set([-999, -9999])
-            #If either atom in bond is in our move_atoms list, then move it:
-            if equiv_to_atoms_in_bond.issubset(move_atoms_num['to']):
-    #k not in to_dict or \
-                print 'Merged '+k
-                to_dict[k] = v
+            except ValueError:
+                #Means that at least one of the atoms do not exist in the 'to'
+                #file.
+                continue #Move to next bond
+            
+            #At this point:
+            #1. At least one atom in bond is in our move_atoms list.
+            #2. Both atoms in bond are in the 'to' atoms list.
+            #So, let's move the bond entry in 'from' to 'to'. But first, need to
+            #modify the 'from' entry to reflect the new atom numbers.
+            def replace_bond(line, old_num, new_num):
+                old_num = str(old_num)
+                new_num = str(new_num)
+
+                r = re.compile(r' '+old_num+' ')
+                #Determine if old_num and new_num has the same number of digits.
+                #If new_num has one less digit, then insert an extra space
+                #before the replacement. If one more digit, then remove an space
+                #before the replacement.
+                #print new_num
+                #print old_num
+                if len(new_num) < len(old_num):
+                    #Currently, assume one digit difference:
+                    repl = '  '+new_num+' '
+                elif len(new_num) > len(old_num):
+                    repl = ''+new_num+' '
+                else:
+                    repl = ' '+new_num+' '
+
+                return r.sub(repl, line)
+
+            for old_num, new_num in zip(from_atoms_in_bond,
+                                        equiv_to_atoms_in_bond):
+                #DANGER! There could be a case, where the second replacement
+                #overwrites the first replacement. Ie. If first replacement
+                #results in replacing 5 with 9, but the second replacement
+                #replaces 9 with 13.
+                v[0] = replace_bond(v[0], old_num, new_num)  #First line
+            
+            print 'Merged '+k
+            print v
+            merge_dict[k] = v
     
-        return to_dict
+        return merge_dict
     
-    def get_equivalent_atom_num(from_atoms, to_atoms, from_atom_num):
-        '''
-        Given a list/tuple of from_atoms and to_atoms and also an atom number from
-        the from_atom list, returns the equivalent atom number from the to_atoms
-        list.
-    
-        @param from_atoms List/tuple of atom numbers.
-        @param to_atoms List/tuple of atom numbers that has equivalent ordering as
-                        the from_atoms list.
-        @param from_atom_num An atom number from the from_atoms list that we are
-                             trying to convert to a 'to' atom number.
-        @return int Equivalent atom num that is in the 'to_atoms' list.
-        '''
-        from_atoms = list(from_atoms) #Must be list to use .index() method
-        
-        try:
-            i = from_atoms.index(from_atom_num)
-        except ValueError:
-            print 'ERROR: Atom number '+str(from_atom_num)+" does not "+\
-                  "exist in 'from' list"
-            sys.exit()
-    
-        try:
-            to_atoms[i]
-        except IndexError:
-            print 'ERROR: Index '+str(i)+" does not "+\
-                  "exist in 'to' list"
-            sys.exit()
-    
-    
-        return to_atoms[i]
+    #def get_equivalent_atom_num(from_atoms, to_atoms, from_atom_num):
+    #    '''
+    #    Given a list/tuple of from_atoms and to_atoms and also an atom number from
+    #    the from_atom list, returns the equivalent atom number from the to_atoms
+    #    list.
+    #
+    #    @param from_atoms List/tuple of atom numbers.
+    #    @param to_atoms List/tuple of atom numbers that has equivalent ordering as
+    #                    the from_atoms list.
+    #    @param from_atom_num An atom number from the from_atoms list that we are
+    #                         trying to convert to a 'to' atom number.
+    #    @return int Equivalent atom num that is in the 'to_atoms' list.
+    #    '''
+    #    from_atoms = list(from_atoms) #Must be list to use .index() method
+    #    
+    #    try:
+    #        i = from_atoms.index(from_atom_num)
+    #    except ValueError:
+    #        print 'ERROR: Atom number '+str(from_atom_num)+" does not "+\
+    #              "exist in 'from' list"
+    #        sys.exit()
+    #
+    #    try:
+    #        to_atoms[i]
+    #    except IndexError:
+    #        print 'ERROR: Index '+str(i)+" does not "+\
+    #              "exist in 'to' list"
+    #        sys.exit()
+    #
+    #
+    #    return to_atoms[i]
 
 
 
