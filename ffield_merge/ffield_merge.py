@@ -55,33 +55,29 @@ def main():
     #new merged ffield file for now).
     #TODO: Have atom_dict_to_lines call merge_atom_dict() without needing the
     #      user to pass in the merged atom dict.
-    merged_atom_dict = merge_f.merge_atom_dict()
-    to_f.sections['atom'] = merge_f.atom_dict_to_lines(merged_atom_dict)
+    if 'atom' in merge_sections:
+        merged_atom_dict = merge_f.merge_atom_dict()
+        to_f.sections['atom'] = merge_f.atom_dict_to_lines(merged_atom_dict)
 
-    merged_bond_dict = merge_f.merge_bond_dict()
-    #print merged_bond_dict
-    to_f.sections['bond'] = merge_f.generic_dict_to_lines(merged_bond_dict)
-    #print to_f.sections['bond']
+    if 'bond' in merge_sections:
+        merged_bond_dict = merge_f.merge_bond_dict()
+        to_f.sections['bond'] = merge_f.generic_dict_to_lines(merged_bond_dict)
     
-    merged_offdiag_dict = merge_f.merge_offdiag_dict()
-    #print merged_offdiag_dict
-    to_f.sections['offdiag'] = merge_f.generic_dict_to_lines(merged_offdiag_dict)
-    #print to_f.sections['offdiag']
+    if 'offdiag' in merge_sections:
+        merged_offdiag_dict = merge_f.merge_offdiag_dict()
+        to_f.sections['offdiag'] = merge_f.generic_dict_to_lines(merged_offdiag_dict)
     
-    merged_angle_dict = merge_f.merge_angle_dict()
-    #print merged_angle_dict
-    to_f.sections['angle'] = merge_f.generic_dict_to_lines(merged_angle_dict)
-    #print to_f.sections['angle']
+    if 'angle' in merge_sections:
+        merged_angle_dict = merge_f.merge_angle_dict()
+        to_f.sections['angle'] = merge_f.generic_dict_to_lines(merged_angle_dict)
     
-    merged_torsion_dict = merge_f.merge_torsion_dict()
-    #print merged_torsion_dict
-    to_f.sections['torsion'] = merge_f.generic_dict_to_lines(merged_torsion_dict)
-    #print to_f.sections['torsion']
+    if 'torsion' in merge_sections:
+        merged_torsion_dict = merge_f.merge_torsion_dict()
+        to_f.sections['torsion'] = merge_f.generic_dict_to_lines(merged_torsion_dict)
 
-    merged_hbond_dict = merge_f.merge_hbond_dict()
-    #print merged_hbond_dict
-    to_f.sections['hbond'] = merge_f.generic_dict_to_lines(merged_hbond_dict)
-    #print to_f.sections['hbond']
+    if 'hbond' in merge_sections:
+        merged_hbond_dict = merge_f.merge_hbond_dict()
+        to_f.sections['hbond'] = merge_f.generic_dict_to_lines(merged_hbond_dict)
 
     #Now save everything to a new file:
     print 'Saved merged ffield file to: '+merged_ffield

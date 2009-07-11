@@ -27,3 +27,10 @@ move_atoms = ('Ti', 'Ru')
 #move_atoms = ('Ru',)
 #move_atoms = ()
 
+#Sections of ffield to merge:
+#(NOTE: General section has not been implemented. You should merge that by
+#       hand if needed.)
+#Valid sections: atom, bond, offdiag, angle, torsion, hbond
+merge_sections = ('atom', 'bond', 'offdiag', 'angle', 'torsion', 'hbond')
+#merge_sections = ('atom')
+
