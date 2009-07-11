@@ -68,11 +68,53 @@ class Ffield:
         self.sections = {}
 
     def __del__(self):
-        #self.f.close()
+        self.f.close()
         pass
 
     def load(self, in_file):
         self.f = file(in_file)
+
+    def save(self, out_file = False):
+        if out_file == False: #No filename set
+            #Then we will output to the same file as in_file
+            out_file = self.f.name
+        #For every section, we print out the lines
+        o = file(out_file, 'w')
+        o.write("Reactive MD-force field: merged\n")
+
+        num_general = len(self.sections['general'])
+        o.write("%3d        ! Number of general parameters\n" % num_general)
+        o.writelines(self.sections['general'])
+
+        num_atom = len(self.sections['atom']) / 4 #Each entry is 4 lines long
+        o.write("%3d    ! Nr of atoms; cov.r; valency;a.m;Rvdw;Evdw;gammaEEM;cov.r2;#\n" % num_atom)
+        o.write("            alfa;gammavdW;valency;Eunder;Eover;chiEEM;etaEEM;n.u.\n")              
+        o.write("            cov r3;Elp;Heat inc.;n.u.;n.u.;n.u.;n.u.\n")
+        o.write("            ov/un;val1;n.u.;val3,vval4\n")
+        o.writelines(self.sections['atom'])
+
+        num_bond = len(self.sections['bond']) / 2 #Each entry is 2 lines long
+        o.write("%3d      ! Nr of bonds; Edis1;LPpen;n.u.;pbe1;pbo5;13corr;pbo6\n" % num_bond)
+        o.write("                         pbe2;pbo3;pbo4;Etrip;pbo1;pbo2;ovcorr\n")                  
+        o.writelines(self.sections['bond'])
+
+        num_offdiag = len(self.sections['offdiag'])
+        o.write("%3d    ! Nr of off-diagonal terms; Ediss;Ro;gamma;rsigma;rpi;rpi2\n" % num_offdiag)
+        o.writelines(self.sections['offdiag'])
+        
+        num_angle = len(self.sections['angle'])
+        o.write("%3d    ! Nr of angles;at1;at2;at3;Thetao,o;ka;kb;pv1;pv2\n" % num_angle)
+        o.writelines(self.sections['angle'])
+        
+        num_torsion = len(self.sections['torsion'])
+        o.write("%3d    ! Nr of torsions;at1;at2;at3;at4;;V1;V2;V3;V2(BO);vconj;n.u;n\n" % num_torsion)
+        o.writelines(self.sections['torsion'])
+
+        num_hbond = len(self.sections['hbond'])
+        o.write("%3d    ! Nr of hydrogen bonds;at1;at2;at3;Rhb;Dehb;vhb1\n" % num_hbond)
+        o.writelines(self.sections['hbond'])
+
+        o.close()
 
     def parse_sections(self):
         '''

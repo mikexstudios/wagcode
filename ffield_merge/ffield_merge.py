@@ -19,12 +19,13 @@ from ffield import Ffield
 
 from_ffield = 'ffield_v-bi-ti-mo-ruN'
 to_ffield   = 'ffield_ti-o-h-na-cl-s-p'
+merged_ffield = 'ffield_merged'
 #to_ffield = 'ffield_v-bi-ti-mo-ruN'
 #from_ffield   = 'ffield_ti-o-h-na-cl-s-p'
-move_atoms = ('C', 'H', 'O', 'N', 'S')
+#move_atoms = ('C', 'H', 'O', 'N', 'S')
 #move_atoms = ('Ti',)
 #move_atoms = ('Ti', 'Ru')
-#move_atoms = ('Ru',)
+move_atoms = ('Ru',)
 
 
 def main():
@@ -32,24 +33,10 @@ def main():
     from_f = Ffield()
     from_f.load(from_ffield)
     from_f.parse_sections()
-    #from_atom_dict = from_f.atom_section_to_dict()
-    #print from_atom_dict.keys()
-    #from_bond_dict = from_f.bond_section_to_dict()
-    #from_offdiag_dict = from_f.offdiag_section_to_dict()
-    #from_angle_dict = from_f.angle_section_to_dict()
-    #from_torsion_dict = from_f.torsion_section_to_dict()
-    #from_hbond_dict = from_f.hbond_section_to_dict()
     
     to_f = Ffield()
     to_f.load(to_ffield)
     to_f.parse_sections()
-    #to_atom_dict = to_f.atom_section_to_dict()
-    #print to_atom_dict.keys()
-    #to_bond_dict = to_f.bond_section_to_dict()
-    #to_offdiag_dict = to_f.offdiag_section_to_dict()
-    #to_angle_dict = to_f.angle_section_to_dict()
-    #to_torsion_dict = to_f.torsion_section_to_dict()
-    #to_hbond_dict = to_f.hbond_section_to_dict()
     
     #Now create merged sections. Merge moves entries from 'from'
     #to 'to' that are specified in the move_atoms tuple despite any conflict.
@@ -58,37 +45,16 @@ def main():
     merge_f.from_f = from_f
     merge_f.to_f = to_f
     merge_f.move_atoms = move_atoms
-    merged_atom_dict = merge_f.merge_atom_dict()
-    #print merged_atom_dict.keys()
     
     #Save merged atom section to the 'to' ffield. (Easier than creating a whole
     #new merged ffield file for now).
     #TODO: Have atom_dict_to_lines call merge_atom_dict() without needing the
     #      user to pass in the merged atom dict.
+    merged_atom_dict = merge_f.merge_atom_dict()
     to_f.sections['atom'] = merge_f.atom_dict_to_lines(merged_atom_dict)
-    #print merged_sections['atom']
-    #print to_f.sections['atom']
-    #print from_f.get_atom_num_mapping()
-    #print to_f.get_atom_num_mapping()
-    #print merge_f.to_f.get_atom_num_mapping()
-   
-    #Get the equivalent numbers of our move_atoms. We do this after we've merged
-    #the atom_dicts so that the atoms we moved over will exist in our 'to' map.
-    #from_move_atoms_num = []
-    #to_move_atoms_num = []
-    #for atom_label in move_atoms:
-    #    from_move_atoms_num.append(from_f.atom_num_lookup(atom_label))
-    #    to_move_atoms_num.append(to_f.atom_num_lookup(atom_label))
-    #from_move_atoms_num = tuple(from_move_atoms_num)
-    #to_move_atoms_num = tuple(to_move_atoms_num)
-    #move_atoms_num = {'from': from_move_atoms_num, 'to': to_move_atoms_num}
-    #print move_atoms_num
 
     merged_bond_dict = merge_f.merge_bond_dict()
     #print merged_bond_dict
-    
-    #Now convert the entries back into lines so that they can be saved into the
-    #section:
     to_f.sections['bond'] = merge_f.generic_dict_to_lines(merged_bond_dict)
     #print to_f.sections['bond']
     
@@ -111,6 +77,10 @@ def main():
     #print merged_hbond_dict
     to_f.sections['hbond'] = merge_f.generic_dict_to_lines(merged_hbond_dict)
     #print to_f.sections['hbond']
+
+    #Now save everything to a new file:
+    print 'Saved merged ffield file to: '+merged_ffield
+    to_f.save(merged_ffield)
 
 class Ffield_merge:
     from_f = None
