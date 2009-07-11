@@ -88,11 +88,14 @@ def main():
     
     #Now convert the entries back into lines so that they can be saved into the
     #section:
-    to_f.sections['bond'] = merge_f.bond_dict_to_lines(merged_bond_dict)
+    to_f.sections['bond'] = merge_f.generic_dict_to_lines(merged_bond_dict)
     #print to_f.sections['bond']
     
     merged_offdiag_dict = merge_f.merge_offdiag_dict()
-    print merged_offdiag_dict
+    #print merged_offdiag_dict
+    to_f.sections['offdiag'] = merge_f.generic_dict_to_lines(merged_offdiag_dict)
+    #print to_f.sections['offdiag']
+    
 
 class Ffield_merge:
     from_f = None
@@ -273,26 +276,6 @@ class Ffield_merge:
     
         return merge_dict
     
-    def bond_dict_to_lines(self, bond_dict):
-        '''
-        Given a bond dict, will return a list of strings that
-        comprise the bond section of ffield. 
-        
-        @param bond_dict Bonds dictionary that we want to add to the ffield object.
-        @return list List of strings that represents the atom section of ffield.
-        '''
-        #The good thing is that when we merged entries, we already updated the
-        #merged bond numbers to reflect any merged atom entries. So essentially,
-        #we can just generate the output without modification:
-        output = []
-        for k, v in bond_dict.iteritems():
-            #Bond entries are 2 lines long, so we must keep that in mind when
-            #appending:
-            for line in v:
-                output.append(line)
-    
-        return output
-    
     def merge_offdiag_dict(self):
         '''
         Given two offdiag dicts (from and to) and also optional atoms to forcefully
@@ -372,6 +355,28 @@ class Ffield_merge:
             merge_dict[k] = v
     
         return merge_dict
+    
+    def generic_dict_to_lines(self, dict):
+        '''
+        Given a dict, will return a list of strings that comprise the
+        section of ffield. 
+        
+        @param dict Dictionary that we want to add to the ffield object.
+        @return list List of strings that represents the atom section of ffield.
+        '''
+        #The good thing is that when we merged entries, we already updated the
+        #merged bond numbers to reflect any merged atom entries. So essentially,
+        #we can just generate the output without modification:
+        output = []
+        for k, v in dict.iteritems():
+            #This is to take into account when entries are more than one line:
+            if type(v) == type([]):
+                for line in v:
+                    output.append(line)
+            else:
+                output.append(v)
+    
+        return output
 
 def tests():
 
