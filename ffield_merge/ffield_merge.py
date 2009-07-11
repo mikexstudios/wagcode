@@ -272,37 +272,29 @@ class Ffield_merge:
             #2. Both atoms in bond are in the 'to' atoms list.
             #So, let's move the bond entry in 'from' to 'to'. But first, need to
             #modify the 'from' entry to reflect the new atom numbers.
-            def replace_bond(line, old_num, new_num):
-                old_num = str(old_num)
-                new_num = str(new_num)
+            def generate_atom_num_string(atoms):
+                '''
+                Given atom numbers in a tuple, generates a string of those atom
+                numbers.
+                '''
+                atom_num_str = ' ' #Start with a space
+                for atom in atoms:
+                    #atom will be at most two digits. If one digit, we want the
+                    #ten's digit place to be a space:
+                    atom_num_str += '%2d ' % atom
+                return atom_num_str
 
-                r = re.compile(r' '+old_num+' ')
-                #Determine if old_num and new_num has the same number of digits.
-                #If new_num has one less digit, then insert an extra space
-                #before the replacement. If one more digit, then remove an space
-                #before the replacement.
-                #print new_num
-                #print old_num
-                if len(new_num) < len(old_num):
-                    #Currently, assume one digit difference:
-                    repl = '  '+new_num+' '
-                elif len(new_num) > len(old_num):
-                    repl = ''+new_num+' '
-                else:
-                    repl = ' '+new_num+' '
-
-                return r.sub(repl, line)
-
-            for old_num, new_num in zip(from_atoms_in_bond,
-                                        equiv_to_atoms_in_bond):
-                #DANGER! There could be a case, where the second replacement
-                #overwrites the first replacement. Ie. If first replacement
-                #results in replacing 5 with 9, but the second replacement
-                #replaces 9 with 13.
-                v[0] = replace_bond(v[0], old_num, new_num)  #First line
+            #Generate atoms num string
+            pattern = generate_atom_num_string(from_atoms_in_bond)
+            repl = generate_atom_num_string(equiv_to_atoms_in_bond)
+            s = re.subn(pattern, repl, v[0])
+            if s[1] <= 0: #If no substitutions were made
+                print 'ERROR: Bond substitution failed!'
+                raise Exception
             
-            print 'Merged '+k
-            print v
+            v[0] = s[0] #Holds the substituted string
+            print 'Merged '+k+' to '+str(equiv_to_atoms_in_bond)
+            #print v
             merge_dict[k] = v
     
         return merge_dict
