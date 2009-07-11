@@ -1,0 +1,29 @@
+############################################################################
+# Configuration file for merging two ffield files for ReaxFF
+# To use: ffield_merge [this_config_file]
+# (Need to run ffield_merge in the same directory as config file.)
+#
+# Note: This file will be sourced into a python script so make sure you have
+# correct syntax here.
+############################################################################
+
+#Filename of the ffield file we want to merge entries from. 
+from_ffield = 'ffield_v-bi-ti-mo-ruN'
+#from_ffield   = 'ffield_ti-o-h-na-cl-s-p'
+
+#Filename of the ffield file we want to merge entries to. 
+to_ffield   = 'ffield_ti-o-h-na-cl-s-p'
+#to_ffield = 'ffield_v-bi-ti-mo-ruN'
+
+#Filename of the merged ffield output file. 
+merged_ffield = 'ffield_merged'
+
+#Atoms that we want to merge over. If such atom has entries that already exist
+#in the to_ffield file, they will be overwritten by entries from the
+#from_ffield file.
+#move_atoms = ('C', 'H', 'O', 'N', 'S')
+#move_atoms = ('Ti',)
+move_atoms = ('Ti', 'Ru')
+#move_atoms = ('Ru',)
+#move_atoms = ()
+

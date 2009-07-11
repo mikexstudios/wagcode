@@ -10,22 +10,27 @@ __website__ = 'http://www.mikexstudios.com'
 __copyright__ = 'General Public License (GPL)'
 
 import sys #For arguments and exit (in older python versions)
-#import os #For file exist check and splitext and path stuff
 import re
-#import time #for sleep
 import itertools
 
 from ffield import Ffield
 
-from_ffield = 'ffield_v-bi-ti-mo-ruN'
-to_ffield   = 'ffield_ti-o-h-na-cl-s-p'
-merged_ffield = 'ffield_merged'
-#to_ffield = 'ffield_v-bi-ti-mo-ruN'
-#from_ffield   = 'ffield_ti-o-h-na-cl-s-p'
-#move_atoms = ('C', 'H', 'O', 'N', 'S')
-#move_atoms = ('Ti',)
-#move_atoms = ('Ti', 'Ru')
-move_atoms = ('Ru',)
+#Arguments. Set some defaults before the control file in case the user does not
+#define them.
+try:
+    control_file= sys.argv[1] #Settings for RDF
+except IndexError:
+    print 'Usage: ffield_merge [controlfile]'
+    print 'Since no control file specified, assuming the file is: control'
+    control_file = 'control'
+
+#Source the control file:
+try:
+    execfile(control_file)
+except IOError: 
+    print 'Error: '+control_file+' does not exist!'
+    sys.exit(1)
+print 'Read control file successfully: '+control_file
 
 
 def main():
