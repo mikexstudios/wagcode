@@ -47,3 +47,9 @@ overwrite = False
 #(NOTE; Only affects bond, offdiag, angle, torsion, and hbond sections.)
 merge_only_conflicts = True
 
+#Should we move only the atoms specified? By default, set to False since only
+#at least ONE atom in a specification (for bond, angle, etc.) must be in our
+#move_atoms list to be merged. But if set to True, all atoms in the
+#specification must be in the move_atoms list.
+#(NOTE; Only affects bond, offdiag, angle, torsion, and hbond sections.)
+only_merge_specified_atoms = True

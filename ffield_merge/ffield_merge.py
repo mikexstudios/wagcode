@@ -19,6 +19,7 @@ from ffield import Ffield
 #define them.
 overwrite = True
 merge_only_conflicts = False
+only_merge_specified_atoms = False
 try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
@@ -208,6 +209,12 @@ class Ffield_merge:
             #NOTE: Don't make from_atoms_in_bond into a set() since bond entries
             #can be two atoms of the same number, which sets cannot handle.
 
+            if only_merge_specified_atoms == True:
+                #Then all atoms MUST be in the move_atoms list.
+                from_atoms_in_bond_set = set(from_atoms_in_bond)
+                if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    continue
+            
             #Since we will only work with bonds that have at least one atom from
             #move_atoms, let's weed out entries that we don't consider here.
             at_least_one = False
@@ -309,6 +316,12 @@ class Ffield_merge:
             from_atoms_in_offdiag = k.split('|')
             from_atoms_in_offdiag = map(int, from_atoms_in_offdiag) #Convert str to int
 
+            if only_merge_specified_atoms == True:
+                #Then all atoms MUST be in the move_atoms list.
+                from_atoms_in_bond_set = set(from_atoms_in_bond)
+                if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    continue
+            
             #Since we will only work with offdiag entries that have at least one
             #atom from move_atoms, let's weed out entries that we don't consider
             #here.  
@@ -433,6 +446,12 @@ class Ffield_merge:
             from_atoms_in_angle = k.split('|')
             from_atoms_in_angle = map(int, from_atoms_in_angle) #Convert str to int
 
+            if only_merge_specified_atoms == True:
+                #Then all atoms MUST be in the move_atoms list.
+                from_atoms_in_bond_set = set(from_atoms_in_bond)
+                if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    continue
+            
             #Since we will only work with angle entries that have at least one
             #atom from move_atoms, let's weed out entries that we don't consider
             #here.  
@@ -534,6 +553,13 @@ class Ffield_merge:
             #TODO: move this into ffield class.
             from_atoms_in_torsion = k.split('|')
             from_atoms_in_torsion = map(int, from_atoms_in_torsion) #Convert str to int
+            
+            if only_merge_specified_atoms == True:
+                #Then all atoms MUST be in the move_atoms list.
+                from_atoms_in_bond_set = set(from_atoms_in_bond)
+                if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    continue
+            
             #Since we will only work with torsion entries that have at least one
             #atom from move_atoms, let's weed out entries that we don't consider
             #here.  
@@ -636,6 +662,12 @@ class Ffield_merge:
             from_atoms_in_hbond = k.split('|')
             from_atoms_in_hbond = map(int, from_atoms_in_hbond) #Convert str to int
 
+            if only_merge_specified_atoms == True:
+                #Then all atoms MUST be in the move_atoms list.
+                from_atoms_in_bond_set = set(from_atoms_in_bond)
+                if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    continue
+            
             #Since we will only work with hbond entries that have at least one
             #atom from move_atoms, let's weed out entries that we don't consider
             #here.  
