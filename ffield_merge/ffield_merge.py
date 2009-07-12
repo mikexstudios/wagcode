@@ -213,6 +213,7 @@ class Ffield_merge:
                 #Then all atoms MUST be in the move_atoms list.
                 from_atoms_in_bond_set = set(from_atoms_in_bond)
                 if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    print from_atoms_in_bond+' not all in move_atoms, skipping'
                     continue
             
             #Since we will only work with bonds that have at least one atom from
@@ -320,6 +321,7 @@ class Ffield_merge:
                 #Then all atoms MUST be in the move_atoms list.
                 from_atoms_in_bond_set = set(from_atoms_in_bond)
                 if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    print from_atoms_in_bond+' not all in move_atoms, skipping'
                     continue
             
             #Since we will only work with offdiag entries that have at least one
@@ -450,6 +452,7 @@ class Ffield_merge:
                 #Then all atoms MUST be in the move_atoms list.
                 from_atoms_in_bond_set = set(from_atoms_in_bond)
                 if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    print from_atoms_in_bond+' not all in move_atoms, skipping'
                     continue
             
             #Since we will only work with angle entries that have at least one
@@ -558,6 +561,7 @@ class Ffield_merge:
                 #Then all atoms MUST be in the move_atoms list.
                 from_atoms_in_bond_set = set(from_atoms_in_bond)
                 if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    print from_atoms_in_bond+' not all in move_atoms, skipping'
                     continue
             
             #Since we will only work with torsion entries that have at least one
@@ -666,6 +670,7 @@ class Ffield_merge:
                 #Then all atoms MUST be in the move_atoms list.
                 from_atoms_in_bond_set = set(from_atoms_in_bond)
                 if not from_atoms_in_bond_set.issubset(self.move_atoms):
+                    print from_atoms_in_bond+' not all in move_atoms, skipping'
                     continue
             
             #Since we will only work with hbond entries that have at least one
