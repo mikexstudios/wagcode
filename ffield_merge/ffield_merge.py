@@ -211,7 +211,9 @@ class Ffield_merge:
 
             if only_merge_specified_atoms == True:
                 #Then all atoms MUST be in the move_atoms list.
-                from_atoms_in_bond_set = set(from_atoms_in_bond)
+                from_atoms_in_bond_labels = map(self.from_f.atom_label_lookup,
+                                                 from_atoms_in_bond)
+                from_atoms_in_bond_set = set(from_atoms_in_bond_labels)
                 if not from_atoms_in_bond_set.issubset(self.move_atoms):
                     print str(from_atoms_in_bond)+' not all in move_atoms, skipping'
                     continue
@@ -319,7 +321,9 @@ class Ffield_merge:
 
             if only_merge_specified_atoms == True:
                 #Then all atoms MUST be in the move_atoms list.
-                from_atoms_in_offdiag_set = set(from_atoms_in_offdiag)
+                from_atoms_in_offdiag_labels = map(self.from_f.atom_label_lookup,
+                                                 from_atoms_in_offdiag)
+                from_atoms_in_offdiag_set = set(from_atoms_in_offdiag_labels)
                 if not from_atoms_in_offdiag_set.issubset(self.move_atoms):
                     print str(from_atoms_in_offdiag)+' not all in move_atoms, skipping'
                     continue
@@ -450,7 +454,9 @@ class Ffield_merge:
 
             if only_merge_specified_atoms == True:
                 #Then all atoms MUST be in the move_atoms list.
-                from_atoms_in_angle_set = set(from_atoms_in_angle)
+                from_atoms_in_angle_labels = map(self.from_f.atom_label_lookup,
+                                                 from_atoms_in_angle)
+                from_atoms_in_angle_set = set(from_atoms_in_angle_labels)
                 if not from_atoms_in_angle_set.issubset(self.move_atoms):
                     print str(from_atoms_in_angle)+' not all in move_atoms, skipping'
                     continue
@@ -559,7 +565,9 @@ class Ffield_merge:
             
             if only_merge_specified_atoms == True:
                 #Then all atoms MUST be in the move_atoms list.
-                from_atoms_in_torsion_set = set(from_atoms_in_torsion)
+                from_atoms_in_torsion_labels = map(self.from_f.atom_label_lookup,
+                                                 from_atoms_in_torsion)
+                from_atoms_in_torsion_set = set(from_atoms_in_torsion_labels)
                 if not from_atoms_in_torsion_set.issubset(self.move_atoms):
                     print str(from_atoms_in_torsion)+' not all in move_atoms, skipping'
                     continue
@@ -668,7 +676,9 @@ class Ffield_merge:
 
             if only_merge_specified_atoms == True:
                 #Then all atoms MUST be in the move_atoms list.
-                from_atoms_in_hbond_set = set(from_atoms_in_hbond)
+                from_atoms_in_hbond_labels = map(self.from_f.atom_label_lookup,
+                                                 from_atoms_in_hbond)
+                from_atoms_in_hbond_set = set(from_atoms_in_hbond_labels)
                 if not from_atoms_in_hbond_set.issubset(self.move_atoms):
                     print str(from_atoms_in_hbond)+' not all in move_atoms, skipping'
                     continue
