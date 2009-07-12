@@ -17,6 +17,7 @@ from ffield import Ffield
 
 #Arguments. Set some defaults before the control file in case the user does not
 #define them.
+overwrite = True
 try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
@@ -231,6 +232,11 @@ class Ffield_merge:
                 #file.
                 continue #Move to next bond
             
+            if overwrite == False: #Means we do not overwrite on conflicts
+                if k in merge_dict:
+                    print 'Conflict, so skipping: '+k
+                    continue #Move to next entry
+            
             #At this point:
             #1. At least one atom in bond is in our move_atoms list.
             #2. Both atoms in bond are in the 'to' atoms list.
@@ -322,6 +328,11 @@ class Ffield_merge:
                 #Means that at least one of the atoms do not exist in the 'to'
                 #file.
                 continue #Move to next offdiag
+            
+            if overwrite == False: #Means we do not overwrite on conflicts
+                if k in merge_dict:
+                    print 'Conflict, so skipping: '+k
+                    continue #Move to next entry
             
             #At this point:
             #1. At least one atom in offdiag is in our move_atoms list.
@@ -437,6 +448,11 @@ class Ffield_merge:
                 #file.
                 continue #Move to next offdiag
             
+            if overwrite == False: #Means we do not overwrite on conflicts
+                if k in merge_dict:
+                    print 'Conflict, so skipping: '+k
+                    continue #Move to next entry
+            
             #At this point:
             #1. At least one atom in offdiag is in our move_atoms list.
             #2. Both atoms in offdiag are in the 'to' atoms list.
@@ -527,6 +543,11 @@ class Ffield_merge:
                 #Means that at least one of the atoms do not exist in the 'to'
                 #file.
                 continue #Move to next offdiag
+            
+            if overwrite == False: #Means we do not overwrite on conflicts
+                if k in merge_dict:
+                    print 'Conflict, so skipping: '+k
+                    continue #Move to next entry
             
             #At this point:
             #1. At least one atom in torsion is in our move_atoms list.
@@ -619,6 +640,11 @@ class Ffield_merge:
                 #Means that at least one of the atoms do not exist in the 'to'
                 #file.
                 continue #Move to next hbond
+            
+            if overwrite == False: #Means we do not overwrite on conflicts
+                if k in merge_dict:
+                    print 'Conflict, so skipping: '+k
+                    continue #Move to next entry
             
             #At this point:
             #1. At least one atom in hbond is in our move_atoms list.

@@ -34,3 +34,9 @@ move_atoms = ('Ti', 'Ru')
 merge_sections = ('atom', 'bond', 'offdiag', 'angle', 'torsion', 'hbond')
 #merge_sections = ('atom')
 
+#Should we overwrite entries in 'to' ffield if it already exists? If set to
+#True (default value), then will overwrite. If set to False, then will not
+#overwrite on conflicts.
+#(NOTE; Only affects bond, offdiag, angle, torsion, and hbond sections.)
+overwrite = False
+
