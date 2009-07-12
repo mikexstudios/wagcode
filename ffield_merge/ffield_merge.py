@@ -18,6 +18,7 @@ from ffield import Ffield
 #Arguments. Set some defaults before the control file in case the user does not
 #define them.
 overwrite = True
+merge_only_conflicts = False
 try:
     control_file= sys.argv[1] #Settings for RDF
 except IndexError:
@@ -236,6 +237,11 @@ class Ffield_merge:
                 if k in merge_dict:
                     print 'Conflict, so skipping: '+k
                     continue #Move to next entry
+
+            if merge_only_conflicts == True:
+                if k not in merge_dict:
+                    print 'No conflict, so skipping: '+k
+                    continue
             
             #At this point:
             #1. At least one atom in bond is in our move_atoms list.
@@ -333,6 +339,11 @@ class Ffield_merge:
                 if k in merge_dict:
                     print 'Conflict, so skipping: '+k
                     continue #Move to next entry
+            
+            if merge_only_conflicts == True:
+                if k not in merge_dict:
+                    print 'No conflict, so skipping: '+k
+                    continue
             
             #At this point:
             #1. At least one atom in offdiag is in our move_atoms list.
@@ -453,6 +464,11 @@ class Ffield_merge:
                     print 'Conflict, so skipping: '+k
                     continue #Move to next entry
             
+            if merge_only_conflicts == True:
+                if k not in merge_dict:
+                    print 'No conflict, so skipping: '+k
+                    continue
+            
             #At this point:
             #1. At least one atom in offdiag is in our move_atoms list.
             #2. Both atoms in offdiag are in the 'to' atoms list.
@@ -548,6 +564,11 @@ class Ffield_merge:
                 if k in merge_dict:
                     print 'Conflict, so skipping: '+k
                     continue #Move to next entry
+            
+            if merge_only_conflicts == True:
+                if k not in merge_dict:
+                    print 'No conflict, so skipping: '+k
+                    continue
             
             #At this point:
             #1. At least one atom in torsion is in our move_atoms list.
@@ -645,6 +666,11 @@ class Ffield_merge:
                 if k in merge_dict:
                     print 'Conflict, so skipping: '+k
                     continue #Move to next entry
+            
+            if merge_only_conflicts == True:
+                if k not in merge_dict:
+                    print 'No conflict, so skipping: '+k
+                    continue
             
             #At this point:
             #1. At least one atom in hbond is in our move_atoms list.

@@ -40,3 +40,10 @@ merge_sections = ('atom', 'bond', 'offdiag', 'angle', 'torsion', 'hbond')
 #(NOTE; Only affects bond, offdiag, angle, torsion, and hbond sections.)
 overwrite = False
 
+#Should we merge only entries that have conflicts? By default, set to False so
+#we merge all entries (unless overwrite is set). If set to True, will merge
+#ONLY entries that have conflicts.
+#(NOTE: overwrite MUST be True for this to work.)
+#(NOTE; Only affects bond, offdiag, angle, torsion, and hbond sections.)
+merge_only_conflicts = True
+
