@@ -243,13 +243,28 @@ class Ffield_merge:
                 #file.
                 continue #Move to next bond
             
+            #Quick hack to fix issue with converting the key used in the below
+            #comparisons to the equivalent key in the 'to' ffield.
+            if equiv_to_atoms_in_bond[0] <= equiv_to_atoms_in_bond[1]:
+                equiv_k = map(str, equiv_to_atoms_in_bond)
+                equiv_k = '|'.join(equiv_k)
+            else:
+                equiv_k = map(str, equiv_to_atoms_in_bond)
+                equiv_k.reverse()
+                equiv_k = '|'.join(equiv_k)
+
+            equiv_k = 
             if overwrite == False: #Means we do not overwrite on conflicts
-                if k in merge_dict:
+                #NO!! These are buggy, we have to convert k to the equiv atoms
+                #and then only check one of the cases (the smaller num to the
+                #left) since we formatted the key that way.
+                #NOTE: fixed with quick hack above.
+                if equiv_k in merge_dict:
                     print 'Conflict, so skipping: '+k
                     continue #Move to next entry
 
             if merge_only_conflicts == True:
-                if k not in merge_dict:
+                if equiv_k not in merge_dict:
                     print 'No conflict, so skipping: '+k
                     continue
             
