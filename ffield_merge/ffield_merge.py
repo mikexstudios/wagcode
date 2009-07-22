@@ -253,7 +253,6 @@ class Ffield_merge:
                 equiv_k.reverse()
                 equiv_k = '|'.join(equiv_k)
 
-            equiv_k = 
             if overwrite == False: #Means we do not overwrite on conflicts
                 #NO!! These are buggy, we have to convert k to the equiv atoms
                 #and then only check one of the cases (the smaller num to the
